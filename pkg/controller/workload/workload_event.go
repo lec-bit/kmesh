@@ -25,10 +25,11 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	workloadapi "kmesh.net/kmesh/api/v2/workloadapi"
+	"istio.io/istio/pkg/workloadapi"
 	"kmesh.net/kmesh/api/v2/workloadapi/security"
 	"kmesh.net/kmesh/pkg/auth"
 	"kmesh.net/kmesh/pkg/controller/config"
+	"kmesh.net/kmesh/pkg/controller/kmeshsecurity"
 	nets "kmesh.net/kmesh/pkg/nets"
 )
 
@@ -40,7 +41,8 @@ const (
 )
 
 var (
-	hashName = NewHashName()
+	hashName                          = NewHashName()
+	ServiceCache map[string]Endpoints = make(map[string]Endpoints)
 )
 
 type ServiceEvent struct {
@@ -48,10 +50,6 @@ type ServiceEvent struct {
 	rqt  *service_discovery_v3.DeltaDiscoveryRequest
 	rbac *auth.Rbac
 }
-
-var (
-	ServiceCache map[string]Endpoints = make(map[string]Endpoints)
-)
 
 type Endpoints map[string]Endpoint
 
@@ -139,6 +137,8 @@ func removeWorkloadResource(removed_resources []string) error {
 	)
 
 	for _, workloadUid := range removed_resources {
+		kmeshsecurity.GetSecretManagerClient().Delete_certs(workloadUid)
+		go deleteWorkloadCache(workloadUid)
 		backendUid := hashName.StrToNum(workloadUid)
 		if eks := EndpointIterFindKey(backendUid); len(eks) != 0 {
 			for _, ekUpdate = range eks {
@@ -364,6 +364,7 @@ func handleDataWithoutService(workload *workloadapi.Workload) error {
 func handleWorkloadData(workload *workloadapi.Workload) error {
 	var err error
 
+	go workloadDataToCache(workload)
 	// if have the service name, the workload belongs to a service
 	if workload.GetServices() != nil {
 		if err = handleDataWithService(workload); err != nil {
@@ -511,6 +512,7 @@ func handleAddressTypeResponse(rsp *service_discovery_v3.DeltaDiscoveryResponse)
 		switch address.GetType().(type) {
 		case *workloadapi.Address_Workload:
 			workload := address.GetWorkload()
+			kmeshsecurity.GetSecretManagerClient().Update_certs(workload)
 			log.Debugf("Address_Workload name:%s", workload.Name)
 			err = handleWorkloadData(workload)
 		case *workloadapi.Address_Service:

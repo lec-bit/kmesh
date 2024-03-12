@@ -21,7 +21,7 @@ import (
 	"net"
 	"strings"
 
-	"kmesh.net/kmesh/api/v2/workloadapi"
+	"istio.io/istio/pkg/workloadapi"
 	"kmesh.net/kmesh/api/v2/workloadapi/security"
 	"kmesh.net/kmesh/pkg/logger"
 )
