@@ -17,9 +17,6 @@
 package kmeshsecurity
 
 import (
-	"bytes"
-	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -29,11 +26,8 @@ import (
 )
 	
 var certs_maps sync.Map
-
 var log = logger.NewLoggerField("kmeshsecurity")
 
-var CACertFilePath = ""
- 
 type SecretManagerClient struct {
 	caClient *CitadelClient
 
@@ -43,79 +37,15 @@ type SecretManagerClient struct {
 	// storing certificates
 	secretcache *sync.Map
 
-	// Dynamically configured Trust Bundle
-	configTrustBundle []byte
-
 	caRootPath string
 }
  
 var ScClient SecretManagerClient
-// concatCerts concatenates PEM certificates, making sure each one starts on a new line
-func concatCerts(certsPEM []string) []byte {
-	if len(certsPEM) == 0 {
-		return []byte{}
-	}
-	var certChain bytes.Buffer
-	for i, c := range certsPEM {
-		certChain.WriteString(c)
-		if i < len(certsPEM)-1 && !strings.HasSuffix(c, "\n") {
-			certChain.WriteString("\n")
-		}
-	}
-	return certChain.Bytes()
-}
-	
-type ProxyArgs struct {
-	DNSDomain          string
-	StsPort            int
-	TokenManagerPlugin string
 
-	MeshConfigFile string
-
-	// proxy config flags (named identically)
-	ServiceCluster         string
-	ProxyLogLevel          string
-	ProxyComponentLogLevel string
-	Concurrency            int
-	TemplateFile           string
-	OutlierLogPath         string
-
-	PodName      string
-	PodNamespace string
-
-	// enableProfiling enables profiling via web interface host:port/debug/pprof/
-	EnableProfiling bool
-}
-   
 const (
-	DefaultPurgeInterval         = 1 * time.Hour
-	DefaultModuleExpiry          = 24 * time.Hour
-	DefaultHTTPRequestTimeout    = 15 * time.Second
-	DefaultHTTPRequestMaxRetries = 5
-)
-   
-const (
-	// MaxRetryInterval retry interval time when reconnect
-	MaxRetryInterval = time.Second * 30
-
-	// MaxRetryCount retry max count when reconnect
-	MaxRetryCount = 3
-
-	jwtPath            = "/var/run/secrets/tokens/istio-token"
 	rootCertPath       = "/var/run/secrets/istio/root-cert.pem"
-
-	KubeAppProberEnvName = "ISTIO_KUBE_APP_PROBERS"
-
-	ConfigPathDir = "./etc/istio/proxy"
-	
 )
    
-// cacheLogPrefix returns a unified log prefix.
-func cacheLogPrefix(resourceName string) string {
-	lPrefix := fmt.Sprintf("resource:%s", resourceName)
-	return lPrefix
-}
-  
 // Automatically check and refresh when the validity period expires
 func (sc *SecretManagerClient) delayedTask(delaytime time.Time, workloadCache *workloadapi.Workload ) {
 	var new_certs *security.SecretItem

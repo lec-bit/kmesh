@@ -17,9 +17,11 @@
 package kmeshsecurity
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc"
@@ -35,17 +37,13 @@ import (
 	"kmesh.net/kmesh/pkg/nets"
 )
  
- var tlsOpts *TLSOptions
- var 	PilotCertProvider = env.Register("PILOT_CERT_PROVIDER", "istiod",
- "The provider of Pilot DNS certificate.").Get()
- 
- 
+ var tlsOpts *TLSOptions 
  type CitadelClient struct {
 	 // It means enable tls connection to Citadel if this is not nil.
 	 tlsOpts  *TLSOptions
 	 client   pb.IstioCertificateServiceClient
 	 conn     *grpc.ClientConn
-	 provider *TokenProvider
+	 //provider *TokenProvider
 	 opts     *security.Options
  }
  
@@ -56,7 +54,7 @@ import (
 	 c := &CitadelClient{
 		 tlsOpts:  tlsOpts,
 		 opts:     opts,
-		 provider: NewCATokenProvider(opts),
+		// provider: NewCATokenProvider(opts),
 	 }
 	 CSRSignAddress := env.Register("MESH_CONTROLLER", "istiod.istio-system.svc:15012", "").Get()
 	 conn, err := nets.GrpcConnect(CSRSignAddress);
@@ -70,20 +68,20 @@ import (
 	 return c, nil
  }
  
- func NewCATokenProvider(opts *security.Options) *TokenProvider {
-	 return &TokenProvider{opts, true}
- }
+ //func NewCATokenProvider(opts *security.Options) *TokenProvider {
+//	 return &TokenProvider{opts, true}
+ //}
  
  // TokenProvider is a grpc PerRPCCredentials that can be used to attach a JWT token to each gRPC call.
  // TokenProvider can be used for XDS, which may involve token exchange through STS.
- type TokenProvider struct {
-	 opts *security.Options
+ //type TokenProvider struct {
+//	 opts *security.Options
 	 // TokenProvider can be used for XDS. Because CA is often used with
 	 // external systems and XDS is not often (yet?), many of the security options only apply to CA
 	 // communication. A more proper solution would be to have separate options for CA and XDS, but
 	 // this requires API changes.
-	 forCA bool
- }
+//	 forCA bool
+ //}
  
  type TLSOptions struct {
 	RootCert string
@@ -119,14 +117,22 @@ func (c *CitadelClient) CSRSign(csrPEM []byte, certValidTTLInSec int64) (res []s
 	return resp.CertChain, nil
 }
 
-// GetRootCertBundle: Citadel (Istiod) CA doesn't publish any endpoint to retrieve CA certs
-func (c *CitadelClient) GetRootCertBundle() ([]string, error) {
-	return []string{}, nil
+// concatCerts concatenates PEM certificates, making sure each one starts on a new line
+func concatCerts(certsPEM []string) []byte {
+	if len(certsPEM) == 0 {
+		return []byte{}
+	}
+	var certChain bytes.Buffer
+	for i, c := range certsPEM {
+		certChain.WriteString(c)
+		if i < len(certsPEM)-1 && !strings.HasSuffix(c, "\n") {
+			certChain.WriteString("\n")
+		}
+	}
+	return certChain.Bytes()
 }
 
 func (c *CitadelClient) fetch_cert(workloadCache *workloadapi.Workload) (secret *security.SecretItem, err error) {
-
-	trustBundlePEM := []string{}
 	var rootCertPEM []byte
  
 	csrHostName := &spiffe.Identity{
@@ -143,16 +149,16 @@ func (c *CitadelClient) fetch_cert(workloadCache *workloadapi.Workload) (secret 
 		ECSigAlg:   pkiutil.SupportedECSignatureAlgorithms(c.opts.ECCSigAlg),
 		ECCCurve:   pkiutil.SupportedEllipticCurves(c.opts.ECCCurve),
 	}
-	logPrefix := cacheLogPrefix(workloadCache.Name)
+
 	// Generate the cert/key, send CSR to CA.
 	csrPEM, keyPEM, err := pkiutil.GenCSR(options)
 	if err != nil {
-		log.Errorf("%s failed to generate key and certificate for CSR: %v", logPrefix, err)
+		log.Errorf("%s failed to generate key and certificate for CSR: %v", workloadCache.Name, err)
 		return nil, err
 	}
 	certChainPEM, err := c.CSRSign(csrPEM, int64(c.opts.SecretTTL.Seconds()))
-	if err == nil {
-		trustBundlePEM, err = c.GetRootCertBundle()
+	if err != nil {
+		return nil, err
 	}
  
 	certChain := concatCerts(certChainPEM)
@@ -162,17 +168,14 @@ func (c *CitadelClient) fetch_cert(workloadCache *workloadapi.Workload) (secret 
 	// Some customer CA may override TTL param that's passed to it.
 	if expireTime, err = nodeagentutil.ParseCertAndGetExpiryTimestamp(certChain); err != nil {
 		log.Errorf("%s failed to extract expire time from server certificate in CSR response %+v: %v",
-			logPrefix, certChainPEM, err)
+		workloadCache.Name, certChainPEM, err)
 		return nil, fmt.Errorf("failed to extract expire time from server certificate in CSR response: %v", err)
 	}
 
-	if len(trustBundlePEM) > 0 {
-		rootCertPEM = concatCerts(trustBundlePEM)
-	} else {
-		// If CA Client has no explicit mechanism to retrieve CA root, infer it from the root of the certChain
-		rootCertPEM = []byte(certChainPEM[len(certChainPEM)-1])
-	}
+	rootCertPEM = []byte(certChainPEM[len(certChainPEM)-1])
 
+	log.Infof("certChain is:%v", certChain);
+	log.Infof("expireTime is:%v", expireTime);
 	return &security.SecretItem{
 		CertificateChain: certChain,
 		PrivateKey:       keyPEM,

@@ -13,4 +13,7 @@ ADD out/$arch/kmesh-cni /usr/bin/
 ADD out/$arch/mdacore /usr/bin/
 ADD build/docker/start_kmesh.sh /kmesh
 
+RUN sed -i '/metalink/d' /etc/yum.repos.d/*.repo
+RUN sed -i '/metadata_expire/d' /etc/yum.repos.d/*.repo
+RUN sed -i 's/repo.openeuler.org/7.223.199.227\/openeuler/g' /etc/yum.repos.d/*.repo
 RUN yum install -y kmod util-linux

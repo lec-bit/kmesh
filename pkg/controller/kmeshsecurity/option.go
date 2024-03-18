@@ -23,6 +23,10 @@ import (
 	"istio.io/istio/pkg/security"
 )
 
+var CACertFilePath = ""
+var 	PilotCertProvider = env.Register("PILOT_CERT_PROVIDER", "istiod",
+"The provider of Pilot DNS certificate.").Get()
+
 func NewSecurityOptions() (*security.Options) {
 	secOpts := &security.Options{
 		CAEndpoint:                     caEndpointEnv,
