@@ -31,9 +31,9 @@ import (
 	"istio.io/istio/pkg/env"
 	"istio.io/istio/pkg/security"
 	"istio.io/istio/pkg/spiffe"
-	"istio.io/istio/pkg/workloadapi"
 	nodeagentutil "istio.io/istio/security/pkg/nodeagent/util"
 	pkiutil "istio.io/istio/security/pkg/pki/util"
+	"kmesh.net/kmesh/pkg/controller/workload"
 	"kmesh.net/kmesh/pkg/nets"
 )
  
@@ -132,9 +132,10 @@ func concatCerts(certsPEM []string) []byte {
 	return certChain.Bytes()
 }
 
-func (c *CitadelClient) fetch_cert(workloadCache *workloadapi.Workload) (secret *security.SecretItem, err error) {
+func (c *CitadelClient) fetch_cert(uid string) (secret *security.SecretItem, err error) {
 	var rootCertPEM []byte
- 
+	
+	workloadCache := workload.GetCacheByUid(uid)
 	csrHostName := &spiffe.Identity{
 		TrustDomain:    workloadCache.TrustDomain, 
 		Namespace:      workloadCache.Namespace, 

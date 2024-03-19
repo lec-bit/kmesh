@@ -512,7 +512,7 @@ func handleAddressTypeResponse(rsp *service_discovery_v3.DeltaDiscoveryResponse)
 		switch address.GetType().(type) {
 		case *workloadapi.Address_Workload:
 			workload := address.GetWorkload()
-			kmeshsecurity.GetSecretManagerClient().Update_certs(workload)
+			kmeshsecurity.GetSecretManagerClient().Update_certs(workload.Uid)
 			log.Debugf("Address_Workload name:%s", workload.Name)
 			err = handleWorkloadData(workload)
 		case *workloadapi.Address_Service:

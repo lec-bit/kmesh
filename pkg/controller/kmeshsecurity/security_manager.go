@@ -20,11 +20,43 @@ import (
 	"sync"
 	"time"
 
+	"container/heap"
+
 	"istio.io/istio/pkg/security"
-	"istio.io/istio/pkg/workloadapi"
 	"kmesh.net/kmesh/pkg/logger"
 )
 	
+type Certs struct {
+	uid string
+	exp time.Time
+}
+
+type PriorityQueue []*Certs
+
+func (pq PriorityQueue) Len() int { return len(pq) }
+
+// 我们希望到期时间越早的证书具有更高的优先级
+func (pq PriorityQueue) Less(i, j int) bool {
+	return pq[i].exp.Before(pq[j].exp)
+}
+
+func (pq PriorityQueue) Swap(i, j int) {
+	pq[i], pq[j] = pq[j], pq[i]
+}
+
+func (pq *PriorityQueue) Push(x interface{}) {
+	item := x.(*Certs)
+	*pq = append(*pq, item)
+}
+
+func (pq *PriorityQueue) Pop() interface{} {
+	old := *pq
+	n := len(old)
+	item := old[n-1]
+	*pq = old[0 : n-1]
+	return item
+}
+
 var certs_maps sync.Map
 var log = logger.NewLoggerField("kmeshsecurity")
 
@@ -38,6 +70,8 @@ type SecretManagerClient struct {
 	secretcache *sync.Map
 
 	caRootPath string
+
+	pending	PriorityQueue
 }
  
 var ScClient SecretManagerClient
@@ -47,30 +81,43 @@ const (
 )
    
 // Automatically check and refresh when the validity period expires
-func (sc *SecretManagerClient) delayedTask(delaytime time.Time, workloadCache *workloadapi.Workload ) {
+func (sc *SecretManagerClient) delayedTask() {
 	var new_certs *security.SecretItem
 	var err error
+	var expireTime time.Time
 	log.Infof("------------------delayedTask--------------------\n");
 	
 	for {
-		<-time.After(time.Until(delaytime.Add(-30 * time.Second)))
-
-		if _, ok := sc.secretcache.Load(workloadCache.Uid); !ok {
-			return
-		} else {
-			new_certs, err = sc.caClient.fetch_cert(workloadCache);
-			if err != nil {
-				return 
+		expireTime = time.Now().Add(600 * time.Second)
+		if (len(sc.pending) > 0) {
+			next_tmp := heap.Pop(&sc.pending).(*Certs)
+			expireTime = next_tmp.exp
+			heap.Push(&sc.pending, next_tmp)
+		}
+		select{
+		case <-time.After(time.Until(expireTime.Add(-300 * time.Second))):
+			next := heap.Pop(&sc.pending).(*Certs)
+			if _, ok := sc.secretcache.Load(next.uid); !ok {
+				continue
+			} else {
+				new_certs, err = sc.caClient.fetch_cert(next.uid);
+				if err != nil {
+					<-time.After(10*time.Second)
+					new_certs, err = sc.caClient.fetch_cert(next.uid);
+				}
 			}
+			// Check if the key exists in the workload, if it does, refresh it, otherwise abandon it. 
+			// If multi-threading refresh errors occur in this round, the certificate will be deleted 
+			// in the next round of workload checks
+			_, ok := sc.secretcache.Load(next.uid);
+			if ok {
+				sc.secretcache.Store(next.uid, *new_certs)
+				heap.Push(&sc.pending, &Certs{exp: new_certs.ExpireTime, uid: next.uid})
+			}
+		case <-time.After(300 * time.Second):
+			continue
 		}
-		// Check if the key exists in the workload, if it does, refresh it, otherwise abandon it. 
-		// If multi-threading refresh errors occur in this round, the certificate will be deleted 
-		// in the next round of workload checks
-		_, ok := sc.secretcache.Load(workloadCache.Uid);
-		if ok {
-			sc.secretcache.Store(workloadCache.Uid, *new_certs)
-			delaytime = new_certs.ExpireTime;
-		}
+		
 	}
 }
  
@@ -86,14 +133,18 @@ func NewSecretManagerClient() (*SecretManagerClient, error) {
 	if err != nil {
 		return nil, err
 	}
+	pq := make(PriorityQueue, 0)
+	heap.Init(&pq)
 
 	ret := &SecretManagerClient{
 		caClient:      caClient,
 		configOptions: options,
 		caRootPath:  options.CARootPath,
 		secretcache: &certs_maps,
+		pending:	pq,
 	}
 	ScClient = *ret
+	go ScClient.delayedTask()
 	return ret, nil
 }
  
@@ -101,43 +152,52 @@ func GetSecretManagerClient() *SecretManagerClient {
 	return &ScClient
 }
 	
+
+var update_cert_channel = make(chan string)
+
+func (sc *SecretManagerClient) Update_certs(workloadUid string) {
+	update_cert_channel <- workloadUid
+}
+
 // Initialize the certificate for the first time
-func (sc *SecretManagerClient) Update_certs(workloadCache *workloadapi.Workload) {
+func (sc *SecretManagerClient) update_certs_routine() {
 	var new_certs *security.SecretItem
 	var err error
+	for workloadUid := range update_cert_channel {
+		if certs, ok := sc.secretcache.Load(workloadUid); ok {
+			if certs == nil {
+				continue
+			}
+			_certs := certs.(security.SecretItem);
 
-	if certs, ok := sc.secretcache.Load(workloadCache.Uid); ok {
-		if certs == nil {
-			return
-		}
-		_certs := certs.(security.SecretItem);
+			if _certs.ExpireTime.After(time.Now()) {
+				continue
+			} else {
+				new_certs, err = sc.caClient.fetch_cert(workloadUid);
+				if err != nil {
+					log.Errorf("fetche_cert error: %v", err)
+					continue
+				}
+			}
 
-		if _certs.ExpireTime.After(time.Now()) {
-			return
 		} else {
-			new_certs, err = sc.caClient.fetch_cert(workloadCache);
+			new_certs, err = sc.caClient.fetch_cert(workloadUid);
 			if err != nil {
 				log.Errorf("fetche_cert error: %v", err)
-				return
+				continue
 			}
 		}
 
-	} else {
-		new_certs, err = sc.caClient.fetch_cert(workloadCache);
-		if err != nil {
-			log.Errorf("fetche_cert error: %v", err)
-			return
+		// Save the new certificate in the map and add a record to the priority queue 
+		// of the auto-refresh task when it expires
+		if new_certs != nil{
+			sc.secretcache.Store(workloadUid, *new_certs)
+			heap.Push(&sc.pending, &Certs{exp: new_certs.ExpireTime, uid: workloadUid})
 		}
 	}
-
-	if new_certs != nil{
-		sc.secretcache.Store(workloadCache.Uid, *new_certs)
-		delaytime := new_certs.ExpireTime;
-		go sc.delayedTask(delaytime, workloadCache);
-	}
-
 }
 	
+
 func (sc *SecretManagerClient) Delete_certs(workloadUid string) {
 	if _, ok := sc.secretcache.Load(workloadUid); ok {
 		sc.secretcache.Delete(workloadUid)
