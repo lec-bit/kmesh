@@ -29,7 +29,6 @@ import (
 	"kmesh.net/kmesh/api/v2/workloadapi/security"
 	"kmesh.net/kmesh/pkg/auth"
 	"kmesh.net/kmesh/pkg/controller/config"
-	"kmesh.net/kmesh/pkg/controller/kmeshsecurity"
 	nets "kmesh.net/kmesh/pkg/nets"
 )
 
@@ -45,6 +44,9 @@ var (
 	ServiceCache map[string]Endpoints = make(map[string]Endpoints)
 )
 
+var SecurityAddDataChannel = make(chan string)
+var SecurityDelDataChannel = make(chan string)
+
 type ServiceEvent struct {
 	ack  *service_discovery_v3.DeltaDiscoveryRequest
 	rqt  *service_discovery_v3.DeltaDiscoveryRequest
@@ -58,6 +60,14 @@ type Endpoint struct {
 	serviceName string
 	portCount   uint32
 	portList    []*workloadapi.Port
+}
+
+func SendAddData(data string) {
+	SecurityAddDataChannel <- data
+}
+
+func SendDelData(data string) {
+	SecurityDelDataChannel <- data
 }
 
 func NewServiceEvent() *ServiceEvent {
@@ -137,7 +147,7 @@ func removeWorkloadResource(removed_resources []string) error {
 	)
 
 	for _, workloadUid := range removed_resources {
-		kmeshsecurity.GetSecretManagerClient().Delete_certs(workloadUid)
+		SendDelData(workloadUid)
 		go deleteWorkloadCache(workloadUid)
 		backendUid := hashName.StrToNum(workloadUid)
 		if eks := EndpointIterFindKey(backendUid); len(eks) != 0 {
@@ -512,7 +522,7 @@ func handleAddressTypeResponse(rsp *service_discovery_v3.DeltaDiscoveryResponse)
 		switch address.GetType().(type) {
 		case *workloadapi.Address_Workload:
 			workload := address.GetWorkload()
-			kmeshsecurity.GetSecretManagerClient().Update_certs(workload.Uid)
+			SendAddData(workload.Uid)
 			log.Debugf("Address_Workload name:%s", workload.Name)
 			err = handleWorkloadData(workload)
 		case *workloadapi.Address_Service:

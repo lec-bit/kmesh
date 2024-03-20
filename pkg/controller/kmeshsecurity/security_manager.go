@@ -23,6 +23,7 @@ import (
 	"container/heap"
 
 	"istio.io/istio/pkg/security"
+	"kmesh.net/kmesh/pkg/controller/workload"
 	"kmesh.net/kmesh/pkg/logger"
 )
 	
@@ -35,7 +36,6 @@ type PriorityQueue []*Certs
 
 func (pq PriorityQueue) Len() int { return len(pq) }
 
-// 我们希望到期时间越早的证书具有更高的优先级
 func (pq PriorityQueue) Less(i, j int) bool {
 	return pq[i].exp.Before(pq[j].exp)
 }
@@ -80,15 +80,47 @@ const (
 	rootCertPath       = "/var/run/secrets/istio/root-cert.pem"
 )
    
+// NewSecretManagerClient creates a new SecretManagerClient.
+func NewSecretManagerClient() (*SecretManagerClient, error) {
+
+	tlsOpts = &TLSOptions{
+		RootCert:      rootCertPath,
+	}
+
+	options:= NewSecurityOptions()
+	caClient, err := NewCitadelClient(options, tlsOpts)
+	if err != nil {
+		return nil, err
+	}
+	pq := make(PriorityQueue, 0)
+	heap.Init(&pq)
+
+	ret := &SecretManagerClient{
+		caClient:      caClient,
+		configOptions: options,
+		caRootPath:  options.CARootPath,
+		secretcache: &certs_maps,
+		pending:	pq,
+	}
+	ScClient = *ret
+	go ScClient.delayedTask()
+	go ScClient.update_certs_routine()
+	go ScClient.delete_certs_routine()
+	return ret, nil
+}
+ 
+func GetSecretManagerClient() *SecretManagerClient {
+	return &ScClient
+}
+	
 // Automatically check and refresh when the validity period expires
 func (sc *SecretManagerClient) delayedTask() {
 	var new_certs *security.SecretItem
 	var err error
 	var expireTime time.Time
-	log.Infof("------------------delayedTask--------------------\n");
-	
+
 	for {
-		expireTime = time.Now().Add(600 * time.Second)
+		expireTime = time.Now().Add(900 * time.Second)
 		if (len(sc.pending) > 0) {
 			next_tmp := heap.Pop(&sc.pending).(*Certs)
 			expireTime = next_tmp.exp
@@ -120,56 +152,18 @@ func (sc *SecretManagerClient) delayedTask() {
 		
 	}
 }
- 
-// NewSecretManagerClient creates a new SecretManagerClient.
-func NewSecretManagerClient() (*SecretManagerClient, error) {
-
-	tlsOpts = &TLSOptions{
-		RootCert:      rootCertPath,
-	}
-
-	options:= NewSecurityOptions()
-	caClient, err := NewCitadelClient(options, tlsOpts)
-	if err != nil {
-		return nil, err
-	}
-	pq := make(PriorityQueue, 0)
-	heap.Init(&pq)
-
-	ret := &SecretManagerClient{
-		caClient:      caClient,
-		configOptions: options,
-		caRootPath:  options.CARootPath,
-		secretcache: &certs_maps,
-		pending:	pq,
-	}
-	ScClient = *ret
-	go ScClient.delayedTask()
-	return ret, nil
-}
- 
-func GetSecretManagerClient() *SecretManagerClient {
-	return &ScClient
-}
-	
-
-var update_cert_channel = make(chan string)
-
-func (sc *SecretManagerClient) Update_certs(workloadUid string) {
-	update_cert_channel <- workloadUid
-}
 
 // Initialize the certificate for the first time
 func (sc *SecretManagerClient) update_certs_routine() {
 	var new_certs *security.SecretItem
 	var err error
-	for workloadUid := range update_cert_channel {
+	for workloadUid := range workload.SecurityAddDataChannel {
+		log.Infof("workloadUid: %v", workloadUid)
 		if certs, ok := sc.secretcache.Load(workloadUid); ok {
 			if certs == nil {
 				continue
 			}
 			_certs := certs.(security.SecretItem);
-
 			if _certs.ExpireTime.After(time.Now()) {
 				continue
 			} else {
@@ -197,9 +191,11 @@ func (sc *SecretManagerClient) update_certs_routine() {
 	}
 }
 	
-
-func (sc *SecretManagerClient) Delete_certs(workloadUid string) {
-	if _, ok := sc.secretcache.Load(workloadUid); ok {
-		sc.secretcache.Delete(workloadUid)
+func (sc *SecretManagerClient) delete_certs_routine() {
+	for workloadUid := range workload.SecurityDelDataChannel {
+		if _, ok := sc.secretcache.Load(workloadUid); ok {
+			sc.secretcache.Delete(workloadUid)
+		}
 	}
+
 }

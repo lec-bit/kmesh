@@ -26,6 +26,7 @@ import (
 var CACertFilePath = ""
 var 	PilotCertProvider = env.Register("PILOT_CERT_PROVIDER", "istiod",
 "The provider of Pilot DNS certificate.").Get()
+var CSRSignAddress = env.Register("MESH_CONTROLLER", "istiod.istio-system.svc:15012", "").Get()
 
 func NewSecurityOptions() (*security.Options) {
 	secOpts := &security.Options{
@@ -100,7 +101,7 @@ var (
 	trustDomainEnv = env.Register("TRUST_DOMAIN", "cluster.local",
 		"The trust domain for spiffe certificates").Get()
 
-	secretTTLEnv = env.Register("SECRET_TTL", 24*time.Hour,
+	secretTTLEnv = env.Register("SECRET_TTL", 6*time.Minute,
 		"The cert lifetime requested by istio agent").Get()
 
 	fileDebounceDuration = env.Register("FILE_DEBOUNCE_DURATION", 100*time.Millisecond,

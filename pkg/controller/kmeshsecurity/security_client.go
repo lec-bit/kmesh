@@ -28,7 +28,6 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/structpb"
 	pb "istio.io/api/security/v1alpha1"
-	"istio.io/istio/pkg/env"
 	"istio.io/istio/pkg/security"
 	"istio.io/istio/pkg/spiffe"
 	nodeagentutil "istio.io/istio/security/pkg/nodeagent/util"
@@ -38,14 +37,20 @@ import (
 )
  
  var tlsOpts *TLSOptions 
+
  type CitadelClient struct {
 	 // It means enable tls connection to Citadel if this is not nil.
 	 tlsOpts  *TLSOptions
 	 client   pb.IstioCertificateServiceClient
 	 conn     *grpc.ClientConn
-	 //provider *TokenProvider
 	 opts     *security.Options
  }
+
+ type TLSOptions struct {
+	RootCert string
+	Key      string
+	Cert     string
+}
  
  // NewCitadelClient create a CA client for Citadel.
  func NewCitadelClient(opts *security.Options, tlsOpts *TLSOptions) (*CitadelClient, error) {
@@ -54,9 +59,8 @@ import (
 	 c := &CitadelClient{
 		 tlsOpts:  tlsOpts,
 		 opts:     opts,
-		// provider: NewCATokenProvider(opts),
 	 }
-	 CSRSignAddress := env.Register("MESH_CONTROLLER", "istiod.istio-system.svc:15012", "").Get()
+
 	 conn, err := nets.GrpcConnect(CSRSignAddress);
 	 if err != nil {
 		 log.Errorf("Failed to connect to endpoint %s: %v", opts.CAEndpoint, err)
@@ -67,27 +71,6 @@ import (
 	 c.client = pb.NewIstioCertificateServiceClient(conn)
 	 return c, nil
  }
- 
- //func NewCATokenProvider(opts *security.Options) *TokenProvider {
-//	 return &TokenProvider{opts, true}
- //}
- 
- // TokenProvider is a grpc PerRPCCredentials that can be used to attach a JWT token to each gRPC call.
- // TokenProvider can be used for XDS, which may involve token exchange through STS.
- //type TokenProvider struct {
-//	 opts *security.Options
-	 // TokenProvider can be used for XDS. Because CA is often used with
-	 // external systems and XDS is not often (yet?), many of the security options only apply to CA
-	 // communication. A more proper solution would be to have separate options for CA and XDS, but
-	 // this requires API changes.
-//	 forCA bool
- //}
- 
- type TLSOptions struct {
-	RootCert string
-	Key      string
-	Cert     string
-}
 
 // CSRSign calls Citadel to sign a CSR.
 func (c *CitadelClient) CSRSign(csrPEM []byte, certValidTTLInSec int64) (res []string, err error) {
@@ -103,6 +86,15 @@ func (c *CitadelClient) CSRSign(csrPEM []byte, certValidTTLInSec int64) (res []s
 		ValidityDuration: certValidTTLInSec,
 		Metadata:         crMetaStruct,
 	}
+
+	defer func() {
+		if err != nil {
+			log.Errorf("failed to sign CSR: %v", err)
+			if err := c.reconnect(); err != nil {
+				log.Errorf("failed reconnect: %v", err)
+			}
+		}
+	}()
 
 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs("ClusterID", c.opts.ClusterID))
 	resp, err := c.client.CreateCertificate(ctx, req)
@@ -136,13 +128,17 @@ func (c *CitadelClient) fetch_cert(uid string) (secret *security.SecretItem, err
 	var rootCertPEM []byte
 	
 	workloadCache := workload.GetCacheByUid(uid)
+	if workloadCache == nil {
+		log.Errorf("get workloadCache failed")
+		err := errors.New("get workloadCache failed")
+		return nil, err
+	}
 	csrHostName := &spiffe.Identity{
 		TrustDomain:    workloadCache.TrustDomain, 
 		Namespace:      workloadCache.Namespace, 
-		ServiceAccount: workloadCache.Name,
+		ServiceAccount: workloadCache.ServiceAccount,
 	}
-	log.Debugf("constructed host name for CSR: %s", csrHostName.String())
- 
+
 	options := pkiutil.CertOptions{
 		Host:       csrHostName.String(),
 		RSAKeySize: c.opts.WorkloadRSAKeySize,
@@ -159,7 +155,11 @@ func (c *CitadelClient) fetch_cert(uid string) (secret *security.SecretItem, err
 	}
 	certChainPEM, err := c.CSRSign(csrPEM, int64(c.opts.SecretTTL.Seconds()))
 	if err != nil {
-		return nil, err
+		err = nil
+		certChainPEM, err = c.CSRSign(csrPEM, int64(c.opts.SecretTTL.Seconds()))
+		if err != nil {
+			return nil, err
+		}
 	}
  
 	certChain := concatCerts(certChainPEM)
@@ -175,8 +175,6 @@ func (c *CitadelClient) fetch_cert(uid string) (secret *security.SecretItem, err
 
 	rootCertPEM = []byte(certChainPEM[len(certChainPEM)-1])
 
-	log.Infof("certChain is:%v", certChain);
-	log.Infof("expireTime is:%v", expireTime);
 	return &security.SecretItem{
 		CertificateChain: certChain,
 		PrivateKey:       keyPEM,
@@ -186,3 +184,18 @@ func (c *CitadelClient) fetch_cert(uid string) (secret *security.SecretItem, err
 		RootCert:         rootCertPEM,
 	}, nil
  }
+
+ func (c *CitadelClient) reconnect() error {
+	if err := c.conn.Close(); err != nil {
+		return fmt.Errorf("failed to close connection: %v", err)
+	}
+
+	conn, err := nets.GrpcConnect(CSRSignAddress);
+	if err != nil {
+		return err
+	}
+	c.conn = conn
+	c.client = pb.NewIstioCertificateServiceClient(conn)
+	log.Info("recreated connection")
+	return nil
+}
