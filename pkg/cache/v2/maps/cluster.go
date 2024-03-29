@@ -26,7 +26,7 @@ import "C"
 import (
 	"fmt"
 	"unsafe"
-
+	"time"
 	"google.golang.org/protobuf/proto"
 
 	cluster_v2 "kmesh.net/kmesh/api/v2/cluster"
@@ -90,11 +90,13 @@ func ClusterUpdate(key string, value *cluster_v2.Cluster) error {
 
 	testString(key, cKey)
 	testCluster(value, cMsg)
-
+	start := time.Now()
 	ret := C.deserial_update_elem(unsafe.Pointer(cKey), unsafe.Pointer(cMsg))
 	if ret != 0 {
 		return fmt.Errorf("ClusterUpdate deserial_update_elem failed")
 	}
+	tc := time.Since(start) 
+    fmt.Printf("ClusterUpdate = %v\n", tc)
 
 	return nil
 }

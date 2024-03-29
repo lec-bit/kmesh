@@ -97,7 +97,7 @@ func newAckRequest(rsp *service_discovery_v3.DiscoveryResponse) *service_discove
 func (svc *ServiceEvent) processAdsResponse(rsp *service_discovery_v3.DiscoveryResponse) {
 	var err error
 
-	log.Debugf("handle ads response, %#v\n", rsp.GetTypeUrl())
+	log.Infof("handle ads response, %#v\n", rsp.GetTypeUrl())
 
 	svc.ack = newAckRequest(rsp)
 	if rsp.GetResources() == nil {

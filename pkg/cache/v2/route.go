@@ -93,6 +93,7 @@ func (cache *RouteConfigCache) Flush() {
 	cache.mutex.Lock()
 	defer cache.mutex.Unlock()
 	for name, route := range cache.apiRouteConfigCache {
+		log.Infof("route name: %v\n route: %v\n status:%v\n", name, route, route.GetApiStatus());
 		switch route.GetApiStatus() {
 		case core_v2.ApiStatus_UPDATE:
 			err = maps_v2.RouteConfigUpdate(route.GetName(), route)

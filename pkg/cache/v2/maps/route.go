@@ -26,7 +26,7 @@ import "C"
 import (
 	"fmt"
 	"unsafe"
-
+	"time"
 	"google.golang.org/protobuf/proto"
 
 	route_v2 "kmesh.net/kmesh/api/v2/route"
@@ -91,10 +91,13 @@ func RouteConfigUpdate(key string, value *route_v2.RouteConfiguration) error {
 	testString(key, cKey)
 	testRouteConfiguration(value, cMsg)
 
+	start := time.Now()
 	ret := C.deserial_update_elem(unsafe.Pointer(cKey), unsafe.Pointer(cMsg))
 	if ret != 0 {
 		return fmt.Errorf("RouteConfigUpdate deserial_update_elem failed")
 	}
+	tc := time.Since(start) 
+    fmt.Printf("RouteConfigUpdate = %v\n", tc)
 
 	return nil
 }

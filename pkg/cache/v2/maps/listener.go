@@ -107,6 +107,7 @@ func ListenerUpdate(key *core_v2.SocketAddress, value *listener_v2.Listener) err
 	testSocketAddress(key, cKey)
 	testListener(value, cMsg)
 
+	start := time.Now()
 	desc := cKey.base.descriptor
 	cKey.base.descriptor = nil
 	ret := C.deserial_update_elem(unsafe.Pointer(cKey), unsafe.Pointer(cMsg))
@@ -114,6 +115,8 @@ func ListenerUpdate(key *core_v2.SocketAddress, value *listener_v2.Listener) err
 	if ret != 0 {
 		return fmt.Errorf("ListenerUpdate deserial_update_elem failed")
 	}
+	tc := time.Since(start) 
+    fmt.Printf("ListenerUpdate = %v\n", tc)
 
 	return nil
 }

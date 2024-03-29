@@ -59,13 +59,13 @@ func (as *AdsStream) AdsStreamProcess() error {
 	if rsp, err = as.Stream.Recv(); err != nil {
 		return fmt.Errorf("stream recv failed, %s", err)
 	}
-
+	fmt.Infof("as.Event.ack:%v\n", as.Event.ack);
 	as.Event.processAdsResponse(rsp)
 
 	if err = as.Stream.Send(as.Event.ack); err != nil {
 		return fmt.Errorf("stream send ack failed, %s", err)
 	}
-
+	fmt.Infof("as.Event.rqt:%v\n", as.Event.rqt);
 	if as.Event.rqt != nil {
 		if err = as.Stream.Send(as.Event.rqt); err != nil {
 			return fmt.Errorf("stream send rqt failed, %s", err)
