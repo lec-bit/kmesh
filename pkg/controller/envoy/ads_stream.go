@@ -19,7 +19,7 @@ package envoy
 import (
 	"context"
 	"fmt"
-
+	"time"
 	service_discovery_v3 "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
 	resource_v3 "github.com/envoyproxy/go-control-plane/pkg/resource/v3"
 
@@ -59,14 +59,17 @@ func (as *AdsStream) AdsStreamProcess() error {
 	if rsp, err = as.Stream.Recv(); err != nil {
 		return fmt.Errorf("stream recv failed, %s", err)
 	}
-	fmt.Infof("as.Event.ack:%v\n", as.Event.ack);
+	start := time.Now()
 	as.Event.processAdsResponse(rsp)
-
+	end := time.Since(start)
+	fmt.Printf("processAdsResponse spend time:%v", end);
+	fmt.Printf("as.Event.ack:%v\n", as.Event.ack);
 	if err = as.Stream.Send(as.Event.ack); err != nil {
 		return fmt.Errorf("stream send ack failed, %s", err)
 	}
-	fmt.Infof("as.Event.rqt:%v\n", as.Event.rqt);
+	
 	if as.Event.rqt != nil {
+		fmt.Printf("as.Event.rqt:%v\n", as.Event.rqt);
 		if err = as.Stream.Send(as.Event.rqt); err != nil {
 			return fmt.Errorf("stream send rqt failed, %s", err)
 		}
