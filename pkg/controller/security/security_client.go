@@ -29,12 +29,13 @@ import (
 	"istio.io/istio/pkg/security"
 	nodeagentutil "istio.io/istio/security/pkg/nodeagent/util"
 	pkiutil "istio.io/istio/security/pkg/pki/util"
+
 	"kmesh.net/kmesh/pkg/nets"
 )
  
  var tlsOpts *TLSOptions 
 
- type KmeshCaClient struct {
+ type CaClient struct {
 	 tlsOpts  *TLSOptions
 	 client   pb.IstioCertificateServiceClient
 	 conn     *grpc.ClientConn
@@ -47,11 +48,11 @@ import (
 	Cert     string
 }
  
- // NewKmeshCaClient create a CA client for CSR sign.
- func NewKmeshCaClient(opts *security.Options, tlsOpts *TLSOptions) (*KmeshCaClient, error) {
+ // NewCaClient create a CA client for CSR sign.
+ func NewCaClient(opts *security.Options, tlsOpts *TLSOptions) (*CaClient, error) {
 	 var err error;
  
-	 c := &KmeshCaClient{
+	 c := &CaClient{
 		 tlsOpts:  tlsOpts,
 		 opts:     opts,
 	 }
@@ -67,11 +68,11 @@ import (
  }
 
 // CSRSend send a grpc request to istio and sign a CSR.
-func (c *KmeshCaClient) CSRSend(csrPEM []byte, certValidsec int64, csrHostName string) ([]string, error) {
+func (c *CaClient) CSRSend(csrPEM []byte, certValidsec int64, Identity string) ([]string, error) {
 	crMeta := &structpb.Struct{
 		Fields: map[string]*structpb.Value{
 			security.ImpersonatedIdentity: {
-				Kind: &structpb.Value_StringValue{StringValue: csrHostName},
+				Kind: &structpb.Value_StringValue{StringValue: Identity},
 			},
 		},
 	}
@@ -116,11 +117,11 @@ func standardCerts(certsPEM []string) []byte {
 	return []byte(certChain.String())
 }
 
-func (c *KmeshCaClient) fetchCert(csrHostName string) (*security.SecretItem, error) {
+func (c *CaClient) fetchCert(Identity string) (*security.SecretItem, error) {
 	var rootCertPEM []byte
 	
 	options := pkiutil.CertOptions{
-		Host:       csrHostName,
+		Host:       Identity,
 		RSAKeySize: c.opts.WorkloadRSAKeySize,
 		PKCS8Key:   c.opts.Pkcs8Keys,
 		ECSigAlg:   pkiutil.SupportedECSignatureAlgorithms(c.opts.ECCSigAlg),
@@ -130,10 +131,10 @@ func (c *KmeshCaClient) fetchCert(csrHostName string) (*security.SecretItem, err
 	// Generate the cert/key, send CSR to CA.
 	csrPEM, keyPEM, err := pkiutil.GenCSR(options)
 	if err != nil {
-		log.Errorf("%s failed to generate key and certificate for CSR: %v", csrHostName, err)
+		log.Errorf("%s failed to generate key and certificate for CSR: %v", Identity, err)
 		return nil, err
 	}
-	certChainPEM, err := c.CSRSend(csrPEM, int64(c.opts.SecretTTL.Seconds()), csrHostName)
+	certChainPEM, err := c.CSRSend(csrPEM, int64(c.opts.SecretTTL.Seconds()), Identity)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get certChainPEM")
 	}
@@ -143,22 +144,23 @@ func (c *KmeshCaClient) fetchCert(csrHostName string) (*security.SecretItem, err
 	
 	if expireTime, err = nodeagentutil.ParseCertAndGetExpiryTimestamp(certChain); err != nil {
 		return nil, fmt.Errorf("%s failed to extract expire time from server certificate in CSR response %+v: %v",
-		csrHostName, certChainPEM, err)
+		Identity, certChainPEM, err)
 	}
 
 	rootCertPEM = []byte(certChainPEM[len(certChainPEM)-1])
 
+	log.Debugf("cert for %v ExpireTime :%v", Identity, expireTime)
 	return &security.SecretItem{
 		CertificateChain: certChain,
 		PrivateKey:       keyPEM,
-		ResourceName:     csrHostName,
+		ResourceName:     Identity,
 		CreatedTime:      time.Now(),
 		ExpireTime:       expireTime,
 		RootCert:         rootCertPEM,
 	}, nil
  }
 
- func (c *KmeshCaClient) reconnect() error {
+ func (c *CaClient) reconnect() error {
 	if err := c.conn.Close(); err != nil {
 		return fmt.Errorf("failed to close connection: %v", err)
 	}

@@ -23,23 +23,20 @@ import (
 	"istio.io/istio/pkg/security"
 )
 
-func NewSecurityOptions() (*security.Options) {
-	secOpts := &security.Options{
+func NewSecurityOptions() *security.Options {
+	return &security.Options{
 		WorkloadRSAKeySize:             workloadRSAKeySizeEnv,
 		Pkcs8Keys:                      pkcs8KeysEnv,
 		ECCSigAlg:                      eccSigAlgEnv,
 		ECCCurve:                       eccCurvEnv,
 		SecretTTL:                      secretTTLEnv,
-		CertSigner:                     certSigner.Get(),
 	}
-
-	return secOpts
 }
 
 var (
-	CSRSignAddress = env.Register("MESH_CONTROLLER", "istiod.istio-system.svc:15012", "").Get()
-	secretTTLEnv = env.Register("SECRET_TTL", 24*time.Hour,
-		"The cert lifetime requested by istio agent").Get()
+	CSRSignAddress = env.Register("CA_CONTROLLER", "istiod.istio-system.svc:15012", "").Get()
+	secretTTLEnv = env.Register("SECRET_TTL", 12*time.Minute,
+		"The cert lifetime requested by kmesh CA agent").Get()
 
 	workloadRSAKeySizeEnv = env.Register("WORKLOAD_RSA_KEY_SIZE", 2048,
 		"Specify the RSA key size to use for workload certificates.").Get()
@@ -47,9 +44,4 @@ var (
 		"Whether to generate PKCS#8 private keys").Get()
 	eccSigAlgEnv        = env.Register("ECC_SIGNATURE_ALGORITHM", "", "The type of ECC signature algorithm to use when generating private keys").Get()
 	eccCurvEnv          = env.Register("ECC_CURVE", "P256", "The elliptic curve to use when ECC_SIGNATURE_ALGORITHM is set to ECDSA").Get()
-
-	// certSigner is cert signer for workload cert
-	certSigner = env.Register("ISTIO_META_CERT_SIGNER", "",
-		"The cert signer info for workload cert")
-
 )

@@ -22,6 +22,7 @@ import (
 	"kmesh.net/kmesh/pkg/bpf"
 	"kmesh.net/kmesh/pkg/constants"
 	"kmesh.net/kmesh/pkg/controller/bypass"
+	"kmesh.net/kmesh/pkg/controller/security"
 	"kmesh.net/kmesh/pkg/logger"
 	"kmesh.net/kmesh/pkg/utils"
 )
@@ -62,6 +63,10 @@ func (c *Controller) Start() error {
 		return fmt.Errorf("failed to start bypass controller: %v", err)
 	}
 
+	if _, err := security.NewsecretManager(c.bpfWorkloadObj); err != nil {
+		return fmt.Errorf("secretManager create failed: %v", err)
+	}
+	
 	return c.client.Run(stopCh)
 }
 

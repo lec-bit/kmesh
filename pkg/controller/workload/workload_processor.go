@@ -25,6 +25,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	"istio.io/istio/pkg/spiffe"
 	"kmesh.net/kmesh/api/v2/workloadapi"
 	"kmesh.net/kmesh/api/v2/workloadapi/security"
 	"kmesh.net/kmesh/bpf/kmesh/bpf2go"
@@ -58,6 +59,25 @@ type Endpoint struct {
 	portList    []*workloadapi.Port
 }
 
+type SecurityData struct {
+	UID			string
+	Identity	string
+	Ip			uint64
+	Operation	string
+}
+
+const (
+	ApplyCert   string = "applyCert"
+	DeleteCert string = "deteleCert"
+)
+
+var SecurityDataChannel = make(chan SecurityData)
+
+func SendData(uid string, Identity string, ip uint64, op string) {
+    data := SecurityData{UID: uid, Identity: Identity, Ip: ip, Operation: op}
+    SecurityDataChannel <- data
+}
+
 func newProcessor(workloadMap bpf2go.KmeshCgroupSockWorkloadMaps) *Processor {
 	return &Processor{
 		ack: nil,
@@ -87,6 +107,31 @@ func newAckRequest(rsp *service_discovery_v3.DeltaDiscoveryResponse) *service_di
 		ErrorDetail:            nil,
 		Node:                   config.GetConfig().GetNode(),
 	}
+}
+
+func GetIdentitybyUid(workloadUid string) string{
+	workloadCache := cache.WorkloadCache.GetWorkloadByUid(workloadUid)
+	if workloadCache == nil {
+		log.Errorf("workloadCache %v is nil", workloadUid)
+		return ""
+	}
+
+	Identity := (&spiffe.Identity{
+		TrustDomain:    workloadCache.TrustDomain, 
+		Namespace:      workloadCache.Namespace, 
+		ServiceAccount: workloadCache.ServiceAccount,
+	}).String()
+	return Identity
+}
+
+func GetWorkloadIp(workloadUid string) uint64 {
+	workloadCache := cache.WorkloadCache.GetWorkloadByUid(workloadUid)
+	if workloadCache == nil {
+		log.Errorf("workloadCache %v is nil", workloadUid)
+		return 0
+	}
+	ip := uint64(nets.ConvertIpByteToUint32(cache.WorkloadCache.GetWorkloadByUid(workloadUid).Addresses[0]))
+	return ip
 }
 
 func (p *Processor) processWorkloadResponse(rsp *service_discovery_v3.DeltaDiscoveryResponse, rbac *auth.Rbac) {
@@ -156,6 +201,9 @@ func (p *Processor) removeWorkloadResource(removed_resources []string) error {
 	)
 
 	for _, workloadUid := range removed_resources {
+		Identity := GetIdentitybyUid(workloadUid)
+		ip := GetWorkloadIp(workloadUid)
+		SendData(workloadUid, Identity, ip, "deleteCert")
 		cache.WorkloadCache.DeleteWorkload(workloadUid)
 
 		backendUid := p.hashName.StrToNum(workloadUid)
@@ -450,6 +498,9 @@ func (p *Processor) handleWorkload(workload *workloadapi.Workload) error {
 			return err
 		}
 	}
+	Identity := GetIdentitybyUid(workload.Uid)
+	ip := GetWorkloadIp(workload.Uid)
+	SendData(workload.Uid, Identity, ip, "applyCert")
 
 	return nil
 }
