@@ -44,8 +44,14 @@ type certRequest struct {
 	Operation int
 }
 
+type CaClient interface {
+	CsrSend(csrPEM []byte, certValidsec int64, identity string) ([]string, error)
+	FetchCert(identity string) (*istiosecurity.SecretItem, error)
+	Close()(error)
+}
+
 type SecretManager struct {
-	caClient *caClient
+	caClient CaClient
 
 	// configOptions includes all configurable params for the cache.
 	configOptions *istiosecurity.Options
@@ -83,11 +89,11 @@ func (s *SecretManager) handleCertRequests(stop <-chan struct{}) {
 			go s.fetchCert(identity)
 		case RETRY:
 			s.retryFetchCert(identity)
-		case DELETE:
+		case DELETE: 
 			s.deleteCert(identity)
 		case Rotate:
 			s.rotateCert(identity)
-		}
+		} 
 	}
 }
 
@@ -114,6 +120,7 @@ func (s *SecretManager) storeCert(identity string, newCert *istiosecurity.Secret
 		return
 	}
 
+	existing.cert = newCert
 	// push to rotate queue one hour before cert expire
 	s.certsRotateQueue.AddAfter(identity, time.Until(newCert.ExpireTime.Add(-1*time.Hour)))
 	log.Debugf("cert %v added to rotation queue, exp: %v", identity, newCert.ExpireTime)
@@ -146,6 +153,7 @@ func NewSecretManager() (*SecretManager, error) {
 	options := NewSecurityOptions()
 	caClient, err := newCaClient(options, tlsOpts)
 	if err != nil {
+		log.Errorf("err : %v\n", err)
 		return nil, err
 	}
 
@@ -164,7 +172,7 @@ func (s *SecretManager) Run(stop <-chan struct{}) {
 	go s.rotateCerts()
 	<-stop
 	s.certsRotateQueue.ShutDown()
-	s.caClient.close()
+	s.caClient.Close()
 }
 
 // Automatically check and rotate when the validity period expires
@@ -183,7 +191,7 @@ func (s *SecretManager) rotateCerts() {
 
 // addCert signs a cert for the identity and cache it.
 func (s *SecretManager) fetchCert(identity string) {
-	newCert, err := s.caClient.fetchCert(identity)
+	newCert, err := s.caClient.FetchCert(identity)
 	if err != nil {
 		log.Errorf("fetchCert for [%v] error: %v", identity, err)
 		// TODO: backoff retry
