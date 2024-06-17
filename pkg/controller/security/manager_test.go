@@ -17,6 +17,7 @@
 package security
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -35,6 +36,10 @@ func TestFileSecrets(t *testing.T) {
 	t.Run("TestCertRotate", func(t *testing.T) {
 		runTestCertRotate(t)
 	})
+	t.Run("TestretryFetchCert", func(t *testing.T) {
+		runTestretryFetchCert(t)
+	})
+
 }
 
 // Test certificate add/delete
@@ -57,8 +62,8 @@ func runTestBaseCert(t *testing.T) {
 	secretManager.SendCertRequest(identity1, ADD)
 	secretManager.SendCertRequest(identity2, ADD)
 	time.Sleep(1000 * time.Millisecond)
-	log.Printf("%v", secretManager.certsCache.certs[identity1])
-	log.Printf("%v", secretManager.certsCache.certs[identity2])
+	log.Printf(">>>>>>>>>>>>%v", secretManager.certsCache.certs[identity1])
+	log.Printf(">>>>>>>>>>》》%v", secretManager.certsCache.certs[identity2])
 	assert.Equal(t, int32(2), secretManager.certsCache.certs[identity1].refCnt)
 	assert.Equal(t, int32(1), secretManager.certsCache.certs[identity2].refCnt)
 
@@ -78,7 +83,7 @@ func runTestBaseCert(t *testing.T) {
 func runTestCertRotate(t *testing.T) {
 	patches := gomonkey.NewPatches()
 	patches.ApplyFunc(newCaClient, func(opts *security.Options, tlsOpts *tlsOptions) (CaClient, error) {
-		// One-hour validity period, it will be Rotated immediately.
+		// One-hour validity period, it will be Rotated after 2 second.
 		return camock.NewMockCaClient(opts, 1*time.Hour + 2*time.Second)
 	})
 	defer patches.Reset()
@@ -94,7 +99,7 @@ func runTestCertRotate(t *testing.T) {
 	secretManager.SendCertRequest(identity1, ADD)
 	secretManager.SendCertRequest(identity2, ADD)
 	time.Sleep(1 * time.Second)
-	log.Printf("%v", secretManager.certsCache.certs[identity1])
+	log.Printf(">>>>>>>>>>>>>>>%v", secretManager.certsCache.certs[identity1])
 	assert.NotNil(t, secretManager.certsCache.certs[identity1].cert.CertificateChain)
 	oldCert1 := secretManager.certsCache.certs[identity1].cert.CertificateChain
 	oldCert2 := secretManager.certsCache.certs[identity2].cert.CertificateChain
@@ -112,3 +117,32 @@ func runTestCertRotate(t *testing.T) {
 	secretManager.SendCertRequest(identity2, DELETE)
 	close(stopCh)
 }
+
+// Test certificate retryFetchCert
+func runTestretryFetchCert(t *testing.T) {
+	patches1 := gomonkey.NewPatches()
+	patches1.ApplyFunc(newCaClient, func(opts *security.Options, tlsOpts *tlsOptions) (CaClient, error) {
+		return camock.NewMockCaClient(opts, 2*time.Hour)
+	})
+	defer patches1.Reset()
+
+	stopCh := make(chan struct{})
+	secretManager, err := NewSecretManager()
+	assert.ErrorIsf(t, err, nil, "NewSecretManager failed %v", err)
+
+	patches2 := gomonkey.NewPatches()
+	patches2.ApplyMethodFunc(secretManager.caClient, "FetchCert", func (identity string) (*security.SecretItem, error) {
+		return nil, fmt.Errorf("abnormal test")
+	})
+
+	go secretManager.Run(stopCh)
+	identity := "identity"
+	secretManager.SendCertRequest(identity, ADD)
+	time.Sleep(100* time.Millisecond)
+	patches2.Reset()
+	time.Sleep(1100* time.Millisecond)
+	assert.NotNil(t, secretManager.certsCache.certs[identity].cert)
+
+	close(stopCh)
+}
+
