@@ -31,6 +31,7 @@ import (
 	"kmesh.net/kmesh/bpf/kmesh/bpf2go"
 	"kmesh.net/kmesh/daemon/options"
 	"kmesh.net/kmesh/pkg/constants"
+	"kmesh.net/kmesh/pkg/version"
 )
 
 type BpfSockConnWorkload struct {
@@ -78,6 +79,12 @@ func (sc *BpfSockConnWorkload) loadKmeshSockConnObjects() (*ebpf.CollectionSpec,
 	setMapPinType(spec, ebpf.PinByName)
 	if err = spec.LoadAndAssign(&sc.KmeshCgroupSockWorkloadObjects, &opts); err != nil {
 		return nil, err
+	}
+
+	_, err = os.Stat(sc.Info.BpfFsPath)
+	if err == nil {
+		log.Printf("目录已存在%v", sc.Info.BpfFsPath)
+		return spec, nil
 	}
 
 	value := reflect.ValueOf(sc.KmeshCgroupSockWorkloadObjects.KmeshCgroupSockWorkloadPrograms)
@@ -128,7 +135,8 @@ func (sc *BpfSockConnWorkload) Attach() error {
 		return err
 	}
 	sc.Link = lk
-
+	log.Printf("xxxxxxxxxxxxxxxxx    %v", version.GetStartStatus)
+	log.Printf("xxxxxxxxxxxxxxxxx    %v", version.StartStatus)
 	_, err = os.Stat(sc.Info.BpfFsPath + "sockconn_prog")
 	if err == nil {
 		log.Printf("目录已存在%v", sc.Info.BpfFsPath + "sockconn_prog")
@@ -219,6 +227,11 @@ func (so *BpfSockOpsWorkload) loadKmeshSockopsObjects() (*ebpf.CollectionSpec, e
 		return nil, err
 	}
 
+	_, err = os.Stat(so.Info.BpfFsPath)
+	if err == nil {
+		log.Printf("目录已存在%v", so.Info.BpfFsPath)
+		return spec, nil
+	}
 	value := reflect.ValueOf(so.KmeshSockopsWorkloadObjects.KmeshSockopsWorkloadPrograms)
 	if err = pinPrograms(&value, so.Info.BpfFsPath); err != nil {
 		return nil, err
@@ -349,6 +362,13 @@ func (sm *BpfSendMsgWorkload) loadKmeshSendmsgObjects() (*ebpf.CollectionSpec, e
 	if err = spec.LoadAndAssign(&sm.KmeshSendmsgObjects, &opts); err != nil {
 		return nil, err
 	}
+
+	_, err = os.Stat(sm.Info.BpfFsPath)
+	if err == nil {
+		log.Printf("目录已存在%v", sm.Info.BpfFsPath)
+		return spec, nil
+	}
+
 	value := reflect.ValueOf(sm.KmeshSendmsgObjects.KmeshSendmsgPrograms)
 	if err = pinPrograms(&value, sm.Info.BpfFsPath); err != nil {
 		return nil, err
@@ -468,6 +488,11 @@ func (xa *BpfXdpAuthWorkload) loadKmeshXdpAuthObjects() (*ebpf.CollectionSpec, e
 		return nil, err
 	}
 
+	_, err = os.Stat(xa.Info.BpfFsPath)
+	if err == nil {
+		log.Printf("目录已存在%v", xa.Info.BpfFsPath)
+		return spec, nil
+	}
 	value := reflect.ValueOf(xa.KmeshXDPAuthObjects.KmeshXDPAuthPrograms)
 	if err = pinPrograms(&value, xa.Info.BpfFsPath); err != nil {
 		return nil, err

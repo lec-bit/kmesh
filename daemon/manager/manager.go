@@ -18,7 +18,6 @@
 package manager
 
 import (
-	"context"
 	"flag"
 	"os"
 	"os/signal"
@@ -26,8 +25,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"kmesh.net/kmesh/daemon/manager/dump"
 	"kmesh.net/kmesh/daemon/manager/version"
@@ -37,7 +34,6 @@ import (
 	"kmesh.net/kmesh/pkg/controller"
 	"kmesh.net/kmesh/pkg/logger"
 	"kmesh.net/kmesh/pkg/status"
-	"kmesh.net/kmesh/pkg/utils"
 )
 
 const (
@@ -115,7 +111,7 @@ func setupCloseHandler() bool {
 	<-ch
 
 	log.Warn("exiting...")
-	return getDaemonset()
+	return bpf.GetDaemonset()
 }
 
 // printFlags print flags
@@ -130,15 +126,3 @@ func addFlags(cmd *cobra.Command, config *options.BootstrapConfigs) {
 	cmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 }
 
-func getDaemonset() bool {
-	clientset, err := utils.GetK8sclient()
-	if err != nil {
-		return false
-	}
-	_, err = clientset.AppsV1().DaemonSets("").List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		log.Printf("daemonset err:%v", err)
-		return false
-	}
-	return true
-}
