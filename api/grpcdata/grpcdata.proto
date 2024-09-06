@@ -5,13 +5,14 @@ package grpcdata;
 option go_package = "kmesh.net/kmesh/api/grpcdata;grpcdata";
 
 message MsgRequest {
-    string Name = 1;
+    string Key = 1;
     XdsOpt XdsOpt = 2;
     bytes msg = 3;
+    bytes msg2 = 4;
 }
 
 message MsgResponse {
-  error error_code = 1;
+  int32 error_code = 1;
   bytes msg = 2;
 }
 

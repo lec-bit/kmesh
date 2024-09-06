@@ -27,7 +27,7 @@ import (
 
 	cluster_v2 "kmesh.net/kmesh/api/v2/cluster"
 	core_v2 "kmesh.net/kmesh/api/v2/core"
-	maps_v2 "kmesh.net/kmesh/pkg/cache/v2/maps"
+	pb "kmesh.net/kmesh/api/v2/grpcdata"
 	"kmesh.net/kmesh/pkg/grpcdata"
 )
 
@@ -131,7 +131,7 @@ func (cache *ClusterCache) Flush() {
 	for name, cluster := range cache.apiClusterCache {
 		if cluster.GetApiStatus() == core_v2.ApiStatus_UPDATE {
 			valueMsg, err := proto.Marshal(cluster)
-			grpcdata.SendMsg(grpcdata.ConnClient, name, valueMsg)
+			err, _ = grpcdata.SendMsg(grpcdata.ConnClient, name, valueMsg, &pb.XdsOpt{XdsNmae: pb.XdsNmae_Cluster, Opt: pb.Opteration_UPDATE})
 			//err := maps_v2.ClusterUpdate(name, cluster)
 			if err == nil {
 				// reset api status after successfully updated
@@ -140,7 +140,8 @@ func (cache *ClusterCache) Flush() {
 				log.Errorf("cluster %s %s flush failed: %v", name, cluster.ApiStatus, err)
 			}
 		} else if cluster.GetApiStatus() == core_v2.ApiStatus_DELETE {
-			err := maps_v2.ClusterDelete(name)
+			err, _ := grpcdata.SendMsg(grpcdata.ConnClient, name, nil, &pb.XdsOpt{XdsNmae: pb.XdsNmae_Cluster, Opt: pb.Opteration_DELETE})
+			// err := maps_v2.ClusterDelete(name)
 			if err == nil {
 				delete(cache.apiClusterCache, name)
 				delete(cache.resourceHash, name)
@@ -157,7 +158,8 @@ func (cache *ClusterCache) Delete() {
 	defer cache.mutex.Unlock()
 	for name, cluster := range cache.apiClusterCache {
 		if cluster.GetApiStatus() == core_v2.ApiStatus_DELETE {
-			err := maps_v2.ClusterDelete(name)
+			err, _ := grpcdata.SendMsg(grpcdata.ConnClient, name, nil, &pb.XdsOpt{XdsNmae: pb.XdsNmae_Cluster, Opt: pb.Opteration_DELETE})
+			// err := maps_v2.ClusterDelete(name)
 			if err == nil {
 				delete(cache.apiClusterCache, name)
 				delete(cache.resourceHash, name)
@@ -174,10 +176,21 @@ func (cache *ClusterCache) DumpBpf() []*cluster_v2.Cluster {
 	clusters := make([]*cluster_v2.Cluster, 0, len(cache.apiClusterCache))
 	for name, c := range cache.apiClusterCache {
 		tmp := &cluster_v2.Cluster{}
-		if err := maps_v2.ClusterLookup(name, tmp); err != nil {
+
+		err, tmpMsg := grpcdata.SendMsg(grpcdata.ConnClient, name, nil, &pb.XdsOpt{XdsNmae: pb.XdsNmae_Cluster, Opt: pb.Opteration_LOOKUP})
+		if err != nil {
 			log.Errorf("ClusterLookup failed, %s", name)
 			continue
 		}
+		err = proto.Unmarshal(tmpMsg, tmp)
+		if err != nil {
+			log.Errorf("ClusterLookup failed, %s", name)
+			continue
+		}
+		// if err := maps_v2.ClusterLookup(name, tmp); err != nil {
+		// 	log.Errorf("ClusterLookup failed, %s", name)
+		// 	continue
+		// }
 
 		tmp.ApiStatus = c.ApiStatus
 		clusters = append(clusters, tmp)

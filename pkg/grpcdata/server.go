@@ -2,6 +2,8 @@ package grpcdata
 
 import (
 	"context"
+	"encoding/base64"
+	"fmt"
 	"log"
 	"net"
 
@@ -16,74 +18,101 @@ import (
 )
 
 type server struct {
-	pb.UnsafeKmeshMsgServiceServer
+	pb.KmeshMsgServiceServer
 }
 
-func handleRequest(req *pb.MsgRequest) error {
+func handleRequest(req *pb.MsgRequest) (error, []byte) {
+	var err error
+	var Msg []byte
 	switch req.XdsOpt.XdsNmae {
 	case pb.XdsNmae_Cluster:
 		valueMsg := &cluster_v2.Cluster{}
-		err := proto.Unmarshal(req.Msg, valueMsg)
+		err = proto.Unmarshal(req.Msg, valueMsg)
 		if err != nil {
-			return err
+			return err, nil
 		}
 		switch req.XdsOpt.Opt {
 		case pb.Opteration_UPDATE:
-			maps_v2.ClusterUpdate(req.Name, valueMsg)
+			err = maps_v2.ClusterUpdate(req.Key, valueMsg)
 		case pb.Opteration_LOOKUP:
-			maps_v2.ClusterLookup(req.Name, valueMsg)
+			err = maps_v2.ClusterLookup(req.Key, valueMsg)
 		case pb.Opteration_DELETE:
-			maps_v2.ClusterDelete(req.Name)
+			err = maps_v2.ClusterDelete(req.Key)
 		}
-	case pb.XdsNmae_Listener:
-		key := &core_v2.SocketAddress{}
-		err := proto.Unmarshal([]byte(req.Name), key)
 		if err != nil {
-			return err
+			return err, nil
+		}
+		Msg, err = proto.Marshal(valueMsg)
+	case pb.XdsNmae_Listener:
+		decodedKeyByte, err := base64.StdEncoding.DecodeString(req.Key)
+		if err != nil {
+			log.Fatalf("DecodeString failed, err is: %v", err)
+		}
+		key := &core_v2.SocketAddress{}
+		err = proto.Unmarshal(decodedKeyByte, key)
+		if err != nil {
+			return fmt.Errorf("unmarshal key failed :%v", err), nil
 		}
 
 		valueMsg := &listener_v2.Listener{}
 		err = proto.Unmarshal(req.Msg, valueMsg)
 		if err != nil {
-			return err
+			return fmt.Errorf("Unmarshal listener failed:%v", err), nil
 		}
+		log.Printf("key:%v", key)
+		log.Printf("valueMsg:%v", valueMsg)
 		switch req.XdsOpt.Opt {
 		case pb.Opteration_UPDATE:
-			maps_v2.ListenerUpdate(key, valueMsg)
+			err = maps_v2.ListenerUpdate(key, valueMsg)
 		case pb.Opteration_LOOKUP:
-			maps_v2.ListenerLookup(key, valueMsg)
+			err = maps_v2.ListenerLookup(key, valueMsg)
 		case pb.Opteration_DELETE:
-			maps_v2.ListenerDelete(key)
+			err = maps_v2.ListenerDelete(key)
+		}
+		if err != nil {
+			return err, nil
+		}
+		log.Printf("valueMsg:%v", valueMsg)
+		if valueMsg != nil {
+			Msg, err = proto.Marshal(valueMsg)
+		}
+		if err != nil {
+			return fmt.Errorf("marshal listener failed:%v", err), nil
 		}
 	case pb.XdsNmae_Route:
 		valueMsg := &route_v2.RouteConfiguration{}
 		err := proto.Unmarshal(req.Msg, valueMsg)
 		if err != nil {
-			return err
+			return err, nil
 		}
 		switch req.XdsOpt.Opt {
 		case pb.Opteration_UPDATE:
-			maps_v2.RouteConfigUpdate(req.Name, valueMsg)
+			err = maps_v2.RouteConfigUpdate(req.Key, valueMsg)
 		case pb.Opteration_LOOKUP:
-			maps_v2.RouteConfigLookup(req.Name, valueMsg)
+			err = maps_v2.RouteConfigLookup(req.Key, valueMsg)
 		case pb.Opteration_DELETE:
-			maps_v2.RouteConfigDelete(req.Name)
+			err = maps_v2.RouteConfigDelete(req.Key)
 		}
+		if err != nil {
+			return err, nil
+		}
+		Msg, err = proto.Marshal(valueMsg)
 	}
-	return nil
+	return err, Msg
 }
 
-func (s *server) SendMsg(ctx context.Context, req *pb.MsgRequest) (*pb.MsgResponse, error) {
-	log.Printf("Received req.Name: %v", req.Name)
+func (s *server) HandleMsg(ctx context.Context, req *pb.MsgRequest) (*pb.MsgResponse, error) {
+	log.Printf("Received req.Name: %v", req.Key)
 	log.Printf("Received req.XdsOpt.Opt %v req.XdsOpt.XdsNmae %v \n ", req.XdsOpt.Opt, req.XdsOpt.XdsNmae)
 	//log.Printf("Received req.Msg: %v", req.Msg)
 
-	err := handleRequest(req)
+	err, Msg := handleRequest(req)
 	if err != nil {
 		log.Printf("err is : %v", err)
+		return &pb.MsgResponse{ErrorCode: -1, Msg: Msg}, err
 	}
 	//log.Printf("valueMsg:\nvalueMsg.ApiStatus:%v\n valueMsg.Name:%v\nvalueMsg.LbPolicy:%v\n valueMsg.LoadAssignment:%v\n valueMsg.ConnectTimeout:%v", valueMsg.ApiStatus, valueMsg.Name, valueMsg.LbPolicy, valueMsg.LoadAssignment, valueMsg.ConnectTimeout)
-	return &pb.MsgResponse{ErrorCode: 0}, nil
+	return &pb.MsgResponse{ErrorCode: 0, Msg: Msg}, err
 }
 
 func GrpcInitServer() {

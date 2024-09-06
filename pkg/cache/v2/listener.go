@@ -20,13 +20,16 @@
 package cache_v2
 
 import (
+	"encoding/base64"
 	"sync"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 
+	"google.golang.org/protobuf/proto"
 	core_v2 "kmesh.net/kmesh/api/v2/core"
+	pb "kmesh.net/kmesh/api/v2/grpcdata"
 	listener_v2 "kmesh.net/kmesh/api/v2/listener"
-	maps_v2 "kmesh.net/kmesh/pkg/cache/v2/maps"
+	"kmesh.net/kmesh/pkg/grpcdata"
 	"kmesh.net/kmesh/pkg/logger"
 )
 
@@ -109,13 +112,37 @@ func (cache *ListenerCache) Flush() {
 	for name, listener := range cache.apiListenerCache {
 		switch listener.GetApiStatus() {
 		case core_v2.ApiStatus_UPDATE:
-			err = maps_v2.ListenerUpdate(listener.GetAddress(), listener)
+			keyByte, err := proto.Marshal(listener.GetAddress())
+			if err != nil {
+				log.Errorf("Marshal listener.GetAddress failed, err is:%v", err)
+				continue
+			}
+			key := base64.StdEncoding.EncodeToString(keyByte)
+			valueMsg, err := proto.Marshal(listener)
+			if err != nil {
+				log.Printf("Marshal(listener) failed :%v", err)
+				continue
+			}
+			log.Printf("key :%v", key)
+			err, _ = grpcdata.SendMsg(grpcdata.ConnClient, key, valueMsg, &pb.XdsOpt{XdsNmae: pb.XdsNmae_Listener, Opt: pb.Opteration_UPDATE})
+			if err != nil {
+				log.Errorf("grpcdata.SendMsg listener failed :%v", err)
+				continue
+			}
+			// err = maps_v2.ListenerUpdate(listener.GetAddress(), listener)
 			if err == nil {
 				// reset api status after successfully updated
 				listener.ApiStatus = core_v2.ApiStatus_NONE
 			}
 		case core_v2.ApiStatus_DELETE:
-			err = maps_v2.ListenerDelete(listener.GetAddress())
+			keyByte, err := proto.Marshal(listener.GetAddress())
+			if err != nil {
+				log.Errorf("Marshal listener.GetAddress failed, err is:%v", err)
+				continue
+			}
+			key := string(keyByte)
+			err, _ = grpcdata.SendMsg(grpcdata.ConnClient, key, nil, &pb.XdsOpt{XdsNmae: pb.XdsNmae_Listener, Opt: pb.Opteration_DELETE})
+			// err = maps_v2.ListenerDelete(listener.GetAddress())
 			if err == nil {
 				delete(cache.apiListenerCache, name)
 				delete(cache.resourceHash, name)
@@ -133,7 +160,21 @@ func (cache *ListenerCache) DumpBpf() []*listener_v2.Listener {
 	listeners := make([]*listener_v2.Listener, 0, len(cache.apiListenerCache))
 	for name, listener := range cache.apiListenerCache {
 		tmp := &listener_v2.Listener{}
-		if err := maps_v2.ListenerLookup(listener.GetAddress(), tmp); err != nil {
+		keyByte, err := proto.Marshal(listener.GetAddress())
+		if err != nil {
+			log.Errorf("Marshal listener.GetAddress failed, err is:%v", err)
+			continue
+		}
+		key := string(keyByte)
+		err, tmpMsg := grpcdata.SendMsg(grpcdata.ConnClient, key, nil, &pb.XdsOpt{XdsNmae: pb.XdsNmae_Listener, Opt: pb.Opteration_LOOKUP})
+
+		// if err := maps_v2.ListenerLookup(listener.GetAddress(), tmp); err != nil {
+		if err != nil {
+			log.Errorf("ListenerLookup failed, %s", name)
+			continue
+		}
+		err = proto.Unmarshal(tmpMsg, tmp)
+		if err != nil {
 			log.Errorf("ListenerLookup failed, %s", name)
 			continue
 		}

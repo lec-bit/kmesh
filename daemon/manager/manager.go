@@ -127,7 +127,7 @@ func ExecuteDaemon(configs *options.BootstrapConfigs, bpfLoader *bpf.BpfLoader) 
 	}
 	log.Info("command Start cni successful")
 	defer cniInstaller.Stop()
-
+	setupCloseHandler()
 	return nil
 }
 

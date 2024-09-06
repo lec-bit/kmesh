@@ -20,10 +20,13 @@ import (
 	"sync"
 
 	"k8s.io/apimachinery/pkg/util/sets"
-
 	core_v2 "kmesh.net/kmesh/api/v2/core"
 	route_v2 "kmesh.net/kmesh/api/v2/route"
-	maps_v2 "kmesh.net/kmesh/pkg/cache/v2/maps"
+	"kmesh.net/kmesh/pkg/grpcdata"
+
+	"google.golang.org/protobuf/proto"
+
+	pb "kmesh.net/kmesh/api/v2/grpcdata"
 )
 
 type RouteConfigCache struct {
@@ -90,13 +93,16 @@ func (cache *RouteConfigCache) Flush() {
 	for name, route := range cache.apiRouteConfigCache {
 		switch route.GetApiStatus() {
 		case core_v2.ApiStatus_UPDATE:
-			err = maps_v2.RouteConfigUpdate(name, route)
+			valueMsg, err := proto.Marshal(route)
+			err, _ = grpcdata.SendMsg(grpcdata.ConnClient, name, valueMsg, &pb.XdsOpt{XdsNmae: pb.XdsNmae_Route, Opt: pb.Opteration_UPDATE})
+			// err = maps_v2.RouteConfigUpdate(name, route)
 			if err == nil {
 				// reset api status after successfully updated
 				route.ApiStatus = core_v2.ApiStatus_NONE
 			}
 		case core_v2.ApiStatus_DELETE:
-			err = maps_v2.RouteConfigDelete(name)
+			err, _ = grpcdata.SendMsg(grpcdata.ConnClient, name, nil, &pb.XdsOpt{XdsNmae: pb.XdsNmae_Route, Opt: pb.Opteration_DELETE})
+			// err = maps_v2.RouteConfigDelete(name)
 			if err == nil {
 				delete(cache.apiRouteConfigCache, name)
 				delete(cache.resourceHash, name)
@@ -114,8 +120,15 @@ func (cache *RouteConfigCache) DumpBpf() []*route_v2.RouteConfiguration {
 	mapCache := make([]*route_v2.RouteConfiguration, 0, len(cache.apiRouteConfigCache))
 	for name, route := range cache.apiRouteConfigCache {
 		tmp := &route_v2.RouteConfiguration{}
-		if err := maps_v2.RouteConfigLookup(name, tmp); err != nil {
+		err, tmpMsg := grpcdata.SendMsg(grpcdata.ConnClient, name, nil, &pb.XdsOpt{XdsNmae: pb.XdsNmae_Route, Opt: pb.Opteration_UPDATE})
+		// if err := maps_v2.RouteConfigLookup(name, tmp); err != nil {
+		if err != nil {
 			log.Errorf("RouteConfigLookup failed, %s", name)
+			continue
+		}
+		err = proto.Unmarshal(tmpMsg, tmp)
+		if err != nil {
+			log.Errorf("ClusterLookup failed, %s", name)
 			continue
 		}
 

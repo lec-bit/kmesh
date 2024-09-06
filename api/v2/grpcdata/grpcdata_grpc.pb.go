@@ -19,14 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	KmeshMsgService_SendMsg_FullMethodName = "/grpcdata.kmeshMsgService/SendMsg"
+	KmeshMsgService_HandleMsg_FullMethodName = "/grpcdata.kmeshMsgService/HandleMsg"
 )
 
 // KmeshMsgServiceClient is the client API for KmeshMsgService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type KmeshMsgServiceClient interface {
-	SendMsg(ctx context.Context, in *MsgRequest, opts ...grpc.CallOption) (*MsgResponse, error)
+	HandleMsg(ctx context.Context, in *MsgRequest, opts ...grpc.CallOption) (*MsgResponse, error)
 }
 
 type kmeshMsgServiceClient struct {
@@ -37,10 +37,10 @@ func NewKmeshMsgServiceClient(cc grpc.ClientConnInterface) KmeshMsgServiceClient
 	return &kmeshMsgServiceClient{cc}
 }
 
-func (c *kmeshMsgServiceClient) SendMsg(ctx context.Context, in *MsgRequest, opts ...grpc.CallOption) (*MsgResponse, error) {
+func (c *kmeshMsgServiceClient) HandleMsg(ctx context.Context, in *MsgRequest, opts ...grpc.CallOption) (*MsgResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MsgResponse)
-	err := c.cc.Invoke(ctx, KmeshMsgService_SendMsg_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, KmeshMsgService_HandleMsg_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (c *kmeshMsgServiceClient) SendMsg(ctx context.Context, in *MsgRequest, opt
 // All implementations must embed UnimplementedKmeshMsgServiceServer
 // for forward compatibility.
 type KmeshMsgServiceServer interface {
-	SendMsg(context.Context, *MsgRequest) (*MsgResponse, error)
+	HandleMsg(context.Context, *MsgRequest) (*MsgResponse, error)
 	mustEmbedUnimplementedKmeshMsgServiceServer()
 }
 
@@ -62,8 +62,8 @@ type KmeshMsgServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedKmeshMsgServiceServer struct{}
 
-func (UnimplementedKmeshMsgServiceServer) SendMsg(context.Context, *MsgRequest) (*MsgResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendMsg not implemented")
+func (UnimplementedKmeshMsgServiceServer) HandleMsg(context.Context, *MsgRequest) (*MsgResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HandleMsg not implemented")
 }
 func (UnimplementedKmeshMsgServiceServer) mustEmbedUnimplementedKmeshMsgServiceServer() {}
 func (UnimplementedKmeshMsgServiceServer) testEmbeddedByValue()                         {}
@@ -86,20 +86,20 @@ func RegisterKmeshMsgServiceServer(s grpc.ServiceRegistrar, srv KmeshMsgServiceS
 	s.RegisterService(&KmeshMsgService_ServiceDesc, srv)
 }
 
-func _KmeshMsgService_SendMsg_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _KmeshMsgService_HandleMsg_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(KmeshMsgServiceServer).SendMsg(ctx, in)
+		return srv.(KmeshMsgServiceServer).HandleMsg(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: KmeshMsgService_SendMsg_FullMethodName,
+		FullMethod: KmeshMsgService_HandleMsg_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(KmeshMsgServiceServer).SendMsg(ctx, req.(*MsgRequest))
+		return srv.(KmeshMsgServiceServer).HandleMsg(ctx, req.(*MsgRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -112,8 +112,8 @@ var KmeshMsgService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*KmeshMsgServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "SendMsg",
-			Handler:    _KmeshMsgService_SendMsg_Handler,
+			MethodName: "HandleMsg",
+			Handler:    _KmeshMsgService_HandleMsg_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
