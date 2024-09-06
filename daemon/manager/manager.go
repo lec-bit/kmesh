@@ -72,18 +72,6 @@ func NewCommand() *cobra.Command {
 	return cmd
 }
 
-func ExecuteBpf(configs *options.BootstrapConfigs, bpfLoader *bpf.BpfLoader) error {
-	go grpcdata.GrpcInitServer()
-	if err := bpfLoader.Start(configs.BpfConfig); err != nil {
-		return err
-	}
-	log.Info("bpf Start successful")
-	defer bpfLoader.Stop()
-
-	setupCloseHandler()
-	return nil
-}
-
 func Execute(configs *options.BootstrapConfigs) error {
 	bpfLoader := bpf.NewBpfLoader(configs.BpfConfig)
 

@@ -1,0 +1,136 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kmesh-system
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kmesh-bpf
+  labels:
+    app: kmesh-bpf
+  namespace: kmesh-system
+spec:
+  selector:
+    matchLabels:
+      app: kmesh
+  template:
+    metadata:
+      labels:
+        app: kmesh
+    spec:
+      tolerations:
+      - effect: NoSchedule
+        operator: Exists
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - effect: NoExecute
+        operator: Exists
+      volumes:
+        # use cgroup requires
+        - name: mnt
+          hostPath:
+            path: /mnt
+        # for eBPF program into the host machine
+        - name: sys-fs-bpf
+          hostPath:
+            path: /sys/fs/bpf
+        # required for compiling and building ko
+        - name: lib-modules
+          hostPath:
+            path: /lib/modules
+        # k8s default cni conflist path
+        - name: cni
+          hostPath:
+            path: /etc/cni/net.d
+        # k8s deafult cni path
+        - name: kmesh-cni-install-path
+          hostPath:
+            path: /opt/cni/bin
+        - name: host-procfs
+          hostPath:
+            path: /proc
+            type: Directory
+        - name: istiod-ca-cert
+          configMap:
+            defaultMode: 420
+            name: istio-ca-root-cert
+        - name: istio-token
+          projected:
+            defaultMode: 420
+            sources:
+              - serviceAccountToken:
+                  audience: istio-ca
+                  expirationSeconds: 43200
+                  path: istio-token
+      containers:
+        - name: kmesh
+          image: ghcr.io/kmesh-net/kmesh-bpf:dp-bpf
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 50051
+          command: ["/bin/sh", "-c"]
+          args: ["./start_kmesh_bpf.sh --mode=ads "]
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["all"]
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: INSTANCE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: XDS_ADDRESS
+              value: "istiod.istio-system.svc:15012"
+            - name: BPF_LOG_SIZE
+              value: "12800"
+            - name: SERVICE_ACCOUNT
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.serviceAccountName
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: COMPONENT
+              value: "bpf"
+          volumeMounts:
+            - name: mnt
+              mountPath: /mnt
+              readOnly: false
+            - name: sys-fs-bpf
+              mountPath: /sys/fs/bpf
+              readOnly: false
+            - name: lib-modules
+              mountPath: /lib/modules
+              readOnly: false
+            # k8s default cni conflist path
+            - name: cni
+              mountPath: /etc/cni/net.d
+              readOnly: false
+            # k8s deafult cni path
+            - name: kmesh-cni-install-path
+              mountPath: /opt/cni/bin
+              readOnly: false
+            - mountPath: /host/proc
+              name: host-procfs
+              readOnly: true
+            - name: istiod-ca-cert
+              mountPath: /var/run/secrets/istio
+            - name: istio-token
+              mountPath: /var/run/secrets/tokens
+          resources:
+            limits:
+              # image online-compile needs 800Mi, or only 200Mi
+              memory: "800Mi"
+              cpu: "1"
+      priorityClassName: system-node-critical
+      serviceAccountName: kmesh

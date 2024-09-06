@@ -2,6 +2,13 @@
 
 # docker image compile online, if not compile online, the following lines also have no effect 
 
+lsmod | grep kmesh > /dev/null
+if [ $? -ne 0 ] && [ -f kmesh.ko ]; then
+	cp kmesh.ko /lib/modules/$(uname -r)
+        depmod -a
+        modprobe kmesh
+fi
+
 mount | grep /mnt/kmesh_cgroup2
 if [ $? -ne 0 ]; then
         mkdir /mnt/kmesh_cgroup2
@@ -19,7 +26,7 @@ if [ $? -ne 0 ]; then
 	fi
 fi
 
-kmesh-daemon $@ &
+kmesh-bpf $@ &
 pid=$!
 
 # pass SIGTERM to kmesh process

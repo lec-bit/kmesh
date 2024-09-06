@@ -3,7 +3,6 @@ package grpcdata
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -11,7 +10,10 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"kmesh.net/kmesh/pkg/logger"
 )
+
+var log = logger.NewLoggerField("workload_controller")
 
 var ConnClient pb.KmeshMsgServiceClient
 
@@ -55,7 +57,7 @@ func GrpcInitClient() (pb.KmeshMsgServiceClient, *grpc.ClientConn) {
 	defer cancel()
 
 	addr := os.Getenv("KMESHBPFADDR")
-	log.Printf("addr :%v", addr)
+	log.Infof("addr :%v", addr)
 	conn, err := grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {
 		log.Printf("grpc failed: %v", err)
