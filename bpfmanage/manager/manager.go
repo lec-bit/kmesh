@@ -31,15 +31,12 @@ import (
 	"kmesh.net/kmesh/daemon/manager/version"
 	"kmesh.net/kmesh/daemon/options"
 	"kmesh.net/kmesh/pkg/bpf"
-	"kmesh.net/kmesh/pkg/cni"
-	"kmesh.net/kmesh/pkg/controller"
 	"kmesh.net/kmesh/pkg/grpcdata"
 	"kmesh.net/kmesh/pkg/logger"
-	"kmesh.net/kmesh/pkg/status"
 )
 
 const (
-	pkgSubsys = "manager"
+	pkgSubsys = "kmesh-bpf"
 )
 
 var log = logger.NewLoggerField(pkgSubsys)
@@ -47,8 +44,8 @@ var log = logger.NewLoggerField(pkgSubsys)
 func NewCommand() *cobra.Command {
 	configs := options.NewBootstrapConfigs()
 	cmd := &cobra.Command{
-		Use:          "kmesh-daemon",
-		Short:        "Start kmesh daemon",
+		Use:          "kmesh-bpf",
+		Short:        "Start kmesh bpf",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			printFlags(cmd.Flags())
@@ -71,8 +68,8 @@ func NewCommand() *cobra.Command {
 
 	return cmd
 }
-
-func ExecuteBpf(configs *options.BootstrapConfigs, bpfLoader *bpf.BpfLoader) error {
+func Execute(configs *options.BootstrapConfigs) error {
+	bpfLoader := bpf.NewBpfLoader(configs.BpfConfig)
 	go grpcdata.GrpcInitServer()
 	if err := bpfLoader.Start(configs.BpfConfig); err != nil {
 		return err
@@ -80,47 +77,6 @@ func ExecuteBpf(configs *options.BootstrapConfigs, bpfLoader *bpf.BpfLoader) err
 	log.Info("bpf Start successful")
 	defer bpfLoader.Stop()
 
-	setupCloseHandler()
-	return nil
-}
-
-func Execute(configs *options.BootstrapConfigs) error {
-	bpfLoader := bpf.NewBpfLoader(configs.BpfConfig)
-
-	return ExecuteDaemon(configs, bpfLoader)
-}
-
-// Execute start daemon manager process
-func ExecuteDaemon(configs *options.BootstrapConfigs, bpfLoader *bpf.BpfLoader) error {
-
-	stopCh := make(chan struct{})
-	defer close(stopCh)
-	log.Infof("before init client")
-	gc, conn := grpcdata.GrpcInitClient()
-	if gc == nil {
-		return nil
-	}
-	defer conn.Close()
-	c := controller.NewController(configs, bpfLoader.GetBpfKmeshWorkload(), configs.BpfConfig.BpfFsPath, configs.BpfConfig.EnableBpfLog)
-	if err := c.Start(stopCh); err != nil {
-		return err
-	}
-	log.Info("controller Start successful")
-	defer c.Stop()
-
-	statusServer := status.NewServer(c.GetXdsClient(), configs, bpfLoader.GetBpfLogLevel())
-	statusServer.StartServer()
-	defer func() {
-		_ = statusServer.StopServer()
-	}()
-
-	cniInstaller := cni.NewInstaller(configs.BpfConfig.Mode,
-		configs.CniConfig.CniMountNetEtcDIR, configs.CniConfig.CniConfigName, configs.CniConfig.CniConfigChained)
-	if err := cniInstaller.Start(); err != nil {
-		return err
-	}
-	log.Info("command Start cni successful")
-	defer cniInstaller.Stop()
 	setupCloseHandler()
 	return nil
 }

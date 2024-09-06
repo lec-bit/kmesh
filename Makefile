@@ -48,6 +48,7 @@ endif
 APPS1 := kmesh-daemon
 APPS2 := mdacore
 APPS3 := kmesh-cni
+APPS4 := kmesh-bpf
 
 # If the hub is not explicitly set, use default to kmesh-net.
 HUB ?= ghcr.io/kmesh-net
@@ -100,6 +101,10 @@ controller:
 	$(call printlog, BUILD, $(APPS3))
 	$(QUIET) (export PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(ROOT_DIR)mk; \
 		$(GO) build -ldflags $(LDFLAGS) -tags $(ENHANCED_KERNEL) -o $(APPS3) $(GOFLAGS) ./cniplugin/main.go)
+	
+	$(call printlog, BUILD, $(APPS4))
+	$(QUIET) (export PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(ROOT_DIR)mk; \
+                $(GO) build -ldflags $(LDFLAGS) -tags $(ENHANCED_KERNEL) -o $(APPS4) $(GOFLAGS) ./bpfmanage/main.go)
 
 .PHONY: kmesh-controller
 kmesh-controller:
@@ -137,6 +142,9 @@ install:
 
 	$(call printlog, INSTALL, $(INSTALL_BIN)/$(APPS3))
 	$(QUIET) install -Dp -m 0500 $(APPS3) $(INSTALL_BIN)
+
+	$(call printlog, INSTALL, $(INSTALL_BIN)/$(APPS4))
+	$(QUIET) install -Dp -m 0500 $(APPS4) $(INSTALL_BIN)
 
 uninstall:
 	$(QUIET) make uninstall -C api/v2-c
