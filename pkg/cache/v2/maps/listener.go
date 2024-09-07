@@ -90,7 +90,7 @@ func ListenerLookup(key *core_v2.SocketAddress, value *listener_v2.Listener) err
 
 func ListenerUpdate(key *core_v2.SocketAddress, value *listener_v2.Listener) error {
 	var err error
-	log.Printf("ListenerUpdate [%s], [%s]", key.String(), value.String())
+	log.Debugf("ListenerUpdate [%s], [%s]", key.String(), value.String())
 
 	cKey, err := socketAddressToClang(key)
 	if err != nil {

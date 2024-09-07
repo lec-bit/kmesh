@@ -84,6 +84,7 @@ func ExecuteDaemon(configs *options.BootstrapConfigs, bpfLoader *bpf.BpfLoader) 
 	stopCh := make(chan struct{})
 	defer close(stopCh)
 	log.Infof("before init client")
+	GetAddr()
 	gc, conn := grpcdata.GrpcInitClient()
 	if gc == nil {
 		return nil

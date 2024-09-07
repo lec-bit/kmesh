@@ -87,12 +87,9 @@ dataplane:
 
 	$(call printlog, BUILD, "kernel")
 	$(QUIET) make -C kernel/ko_src
-		$(call printlog, BUILD, $(APPS2))
+	
+	$(call printlog, BUILD, $(APPS2))
 	$(QUIET) cd oncn-mda && cmake . -B build && make -C build
-
-	$(call printlog, BUILD, $(APPS3))
-	$(QUIET) (export PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(ROOT_DIR)mk; \
-		$(GO) build -ldflags $(LDFLAGS) -tags $(ENHANCED_KERNEL) -o $(APPS3) $(GOFLAGS) ./cniplugin/main.go)
 
 	$(call printlog, BUILD, $(APPS4))
 	$(QUIET) (export PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(ROOT_DIR)mk; \
@@ -103,7 +100,11 @@ controller:
 	$(call printlog, BUILD, $(APPS1))
 	$(QUIET) (export PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(ROOT_DIR)mk; \
 		$(GO) build -ldflags $(LDFLAGS) -tags $(ENHANCED_KERNEL) -o $(APPS1) $(GOFLAGS) ./daemon/main.go)
-	
+
+	$(call printlog, BUILD, $(APPS3))
+	$(QUIET) (export PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(ROOT_DIR)mk; \
+		$(GO) build -ldflags $(LDFLAGS) -tags $(ENHANCED_KERNEL) -o $(APPS3) $(GOFLAGS) ./cniplugin/main.go)
+
 .PHONY: kmesh-controller
 kmesh-controller:
 	hack/controller.sh
@@ -161,6 +162,9 @@ build:
 	./kmesh_compile.sh
 	
 docker: build
+	docker build --build-arg arch=$(DIR) -f build/docker/kmesh.dockerfile -t $(HUB)/$(TARGET):$(TAG) .
+
+kmesh-docker: kmesh-controller
 	docker build --build-arg arch=$(DIR) -f build/docker/kmesh.dockerfile -t $(HUB)/$(TARGET):$(TAG) .
 
 bpf-docker:

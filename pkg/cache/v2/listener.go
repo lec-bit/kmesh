@@ -120,10 +120,9 @@ func (cache *ListenerCache) Flush() {
 			key := base64.StdEncoding.EncodeToString(keyByte)
 			valueMsg, err := proto.Marshal(listener)
 			if err != nil {
-				log.Printf("Marshal(listener) failed :%v", err)
+				log.Errorf("Marshal listener failed :%v", err)
 				continue
 			}
-			log.Printf("key :%v", key)
 			err, _ = grpcdata.SendMsg(grpcdata.ConnClient, key, valueMsg, &pb.XdsOpt{XdsNmae: pb.XdsNmae_Listener, Opt: pb.Opteration_UPDATE})
 			if err != nil {
 				log.Errorf("grpcdata.SendMsg listener failed :%v", err)

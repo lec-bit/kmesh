@@ -58,8 +58,6 @@ func handleRequest(req *pb.MsgRequest) (error, []byte) {
 		if err != nil {
 			return fmt.Errorf("Unmarshal listener failed:%v", err), nil
 		}
-		log.Printf("key:%v", key)
-		log.Printf("valueMsg:%v", valueMsg)
 		switch req.XdsOpt.Opt {
 		case pb.Opteration_UPDATE:
 			err = maps_v2.ListenerUpdate(key, valueMsg)
@@ -71,7 +69,6 @@ func handleRequest(req *pb.MsgRequest) (error, []byte) {
 		if err != nil {
 			return err, nil
 		}
-		log.Printf("valueMsg:%v", valueMsg)
 		if valueMsg != nil {
 			Msg, err = proto.Marshal(valueMsg)
 		}
@@ -101,16 +98,12 @@ func handleRequest(req *pb.MsgRequest) (error, []byte) {
 }
 
 func (s *server) HandleMsg(ctx context.Context, req *pb.MsgRequest) (*pb.MsgResponse, error) {
-	log.Printf("Received req.Name: %v", req.Key)
-	log.Printf("Received req.XdsOpt.Opt %v req.XdsOpt.XdsNmae %v \n ", req.XdsOpt.Opt, req.XdsOpt.XdsNmae)
-	//log.Printf("Received req.Msg: %v", req.Msg)
+	log.Debugf("Received req.Name: %v", req.Key)
 
 	err, Msg := handleRequest(req)
 	if err != nil {
-		log.Printf("err is : %v", err)
 		return &pb.MsgResponse{ErrorCode: -1, Msg: Msg}, err
 	}
-	//log.Printf("valueMsg:\nvalueMsg.ApiStatus:%v\n valueMsg.Name:%v\nvalueMsg.LbPolicy:%v\n valueMsg.LoadAssignment:%v\n valueMsg.ConnectTimeout:%v", valueMsg.ApiStatus, valueMsg.Name, valueMsg.LbPolicy, valueMsg.LoadAssignment, valueMsg.ConnectTimeout)
 	return &pb.MsgResponse{ErrorCode: 0, Msg: Msg}, err
 }
 
@@ -121,7 +114,6 @@ func GrpcInitServer() {
 	}
 	s := grpc.NewServer()
 	pb.RegisterKmeshMsgServiceServer(s, &server{})
-	log.Printf("server listening at %v", lis.Addr())
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

@@ -65,10 +65,10 @@ spec:
                   path: istio-token
       containers:
         - name: kmesh
-          image: ghcr.io/kmesh-net/kmesh:latest
+          image: ghcr.io/kmesh-net/kmesh:dp-kmesh
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh", "-c"]
-          args: ["./start_kmesh.sh --mode=workload --enable-bypass=false --enable-bpf-log=true"]
+          args: ["./start_kmesh.sh --mode=ads --enable-bypass=false --enable-bpf-log=false"]
           securityContext:
             privileged: true
             capabilities:
