@@ -8,7 +8,6 @@ message MsgRequest {
     string Key = 1;
     XdsOpt XdsOpt = 2;
     bytes msg = 3;
-    bytes msg2 = 4;
 }
 
 message MsgResponse {

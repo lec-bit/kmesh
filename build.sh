@@ -102,6 +102,7 @@ fi
 if [ "$1" == "-k"  -o  "$1" == "--kmesh-controller" ]; then
     prepare
     make controller
+    make controller-install
     exit
 fi
 

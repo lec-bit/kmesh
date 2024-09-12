@@ -126,21 +126,24 @@ gen: tidy\
 gen-check: gen
 	hack/gen-check.sh
 
-install:
+controller-install:
+
 	$(QUIET) make install -C api/v2-c
 	$(QUIET) make install -C bpf/deserialization_to_bpf_map
 	$(QUIET) make install -C kernel/ko_src
-
+	
 	$(call printlog, INSTALL, $(INSTALL_BIN)/$(APPS1))
 	$(QUIET) install -Dp -m 0500 $(APPS1) $(INSTALL_BIN)
-	
+
+	$(call printlog, INSTALL, $(INSTALL_BIN)/$(APPS3))
+	$(QUIET) install -Dp -m 0500 $(APPS3) $(INSTALL_BIN)
+
+install: controller-install
+
 	$(call printlog, INSTALL, $(INSTALL_BIN)/$(APPS2))
 	$(QUIET) install -Dp -m 0500 oncn-mda/deploy/$(APPS2) $(INSTALL_BIN)
 	$(QUIET) install -Dp -m 0400 oncn-mda/build/ebpf_src/CMakeFiles/sock_ops.dir/sock_ops.c.o /usr/share/oncn-mda/sock_ops.c.o
 	$(QUIET) install -Dp -m 0400 oncn-mda/build/ebpf_src/CMakeFiles/sock_redirect.dir/sock_redirect.c.o /usr/share/oncn-mda/sock_redirect.c.o
-
-	$(call printlog, INSTALL, $(INSTALL_BIN)/$(APPS3))
-	$(QUIET) install -Dp -m 0500 $(APPS3) $(INSTALL_BIN)
 
 	$(call printlog, INSTALL, $(INSTALL_BIN)/$(APPS4))
 	$(QUIET) install -Dp -m 0500 $(APPS4) $(INSTALL_BIN)

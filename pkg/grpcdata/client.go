@@ -42,7 +42,8 @@ func GrpcInitClient() (pb.KmeshMsgServiceClient, *grpc.ClientConn) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	addr := os.Getenv("KMESHBPFADDR")
+	addr := os.Getenv("NODE_IP")
+	addr = addr + ":50051"
 	log.Infof("addr :%v", addr)
 	conn, err := grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {

@@ -21,6 +21,12 @@ Requires: libboundscheck
 
 ExclusiveArch: x86_64 aarch64
 
+%package bpf
+Summary: kmesh-bpf files
+
+%description bpf
+kmesh bpf files
+
 %package devel
 Summary: Development files
 
@@ -59,7 +65,7 @@ mkdir -p %{buildroot}/%{_sysconfdir}/oncn-mda
 install %{_builddir}/%{name}-%{version}/oncn-mda/etc/oncn-mda.conf %{buildroot}/%{_sysconfdir}/oncn-mda/
 
 mkdir -p %{buildroot}/usr/lib/systemd/system
-install %{_builddir}/%{name}-%{version}/build/kmesh.service %{buildroot}/usr/lib/systemd/system
+install %{_builddir}/%{name}-%{version}/build/kmesh-bpf.service %{buildroot}/usr/lib/systemd/system
 
 mkdir -p %{buildroot}/usr/share/kmesh
 find %{_builddir}/%{name}-%{version}/bpf/kmesh/bpf2go -type f ! -name 'bpf2go.go' -exec install -m 644 {} %{buildroot}/usr/share/kmesh \;
@@ -78,10 +84,10 @@ depmod -a
 if [ "$1" == "1" ]; then
     systemctl status kmesh | grep "active (running)"
     if [ "$?" == "0" ]; then
-        systemctl restart kmesh.service
+        systemctl restart kmesh-bpf.service
     fi
 else
-    systemctl stop kmesh.service
+    systemctl stop kmesh-bpf.service
 fi
 
 %postun
@@ -97,7 +103,6 @@ rm -rf %{buildroot}
 %defattr(-,root,root)
 %attr(0500,root,root) %{_bindir}/kmesh-daemon
 %attr(0500,root,root) %{_bindir}/kmesh-cni
-%attr(0500,root,root) %{_bindir}/kmesh-bpf
 %attr(0500,root,root) %{_bindir}/mdacore
 
 %attr(0500,root,root) %dir /usr/share/oncn-mda
@@ -107,9 +112,21 @@ rm -rf %{buildroot}
 %attr(0700,root,root) %dir %{_sysconfdir}/kmesh
 %attr(0700,root,root) %dir %{_sysconfdir}/oncn-mda
 %config(noreplace) %attr(0600,root,root) %{_sysconfdir}/oncn-mda/oncn-mda.conf
-%config(noreplace) %attr(0600,root,root) /usr/lib/systemd/system/kmesh.service
+%config(noreplace) %attr(0600,root,root) /usr/lib/systemd/system/kmesh-bpf.service
 %attr(0500,root,root) /usr/bin/kmesh-start-pre.sh
 %attr(0500,root,root) /usr/bin/kmesh-stop-post.sh
+
+%files bpf
+%attr(0500,root,root) %{_bindir}/kmesh-bpf
+%config(noreplace) %attr(0600,root,root) /usr/lib/systemd/system/kmesh-bpf.service
+%attr(0500,root,root) /usr/bin/kmesh-start-pre.sh
+%attr(0500,root,root) /usr/bin/kmesh-stop-post.sh
+
+%attr(0500,root,root) %dir /lib/modules/kmesh
+%attr(0400,root,root) /lib/modules/kmesh/kmesh.ko
+
+%attr(0500,root,root) /usr/lib64/libkmesh_deserial.so
+%attr(0500,root,root) /usr/lib64/libkmesh_api_v2_c.so
 
 %files devel
 %attr(0500,root,root) %dir /lib/modules/kmesh

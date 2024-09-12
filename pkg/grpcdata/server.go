@@ -20,7 +20,7 @@ type server struct {
 	pb.KmeshMsgServiceServer
 }
 
-func handleRequest(req *pb.MsgRequest) (error, []byte) {
+func handleRequest(req *pb.MsgRequest) ([]byte, error) {
 	var err error
 	var Msg []byte
 	switch req.XdsOpt.XdsNmae {
@@ -28,7 +28,7 @@ func handleRequest(req *pb.MsgRequest) (error, []byte) {
 		valueMsg := &cluster_v2.Cluster{}
 		err = proto.Unmarshal(req.Msg, valueMsg)
 		if err != nil {
-			return err, nil
+			return nil, err
 		}
 		switch req.XdsOpt.Opt {
 		case pb.Opteration_UPDATE:
@@ -39,7 +39,7 @@ func handleRequest(req *pb.MsgRequest) (error, []byte) {
 			err = maps_v2.ClusterDelete(req.Key)
 		}
 		if err != nil {
-			return err, nil
+			return nil, err
 		}
 		Msg, err = proto.Marshal(valueMsg)
 	case pb.XdsNmae_Listener:
@@ -50,13 +50,13 @@ func handleRequest(req *pb.MsgRequest) (error, []byte) {
 		key := &core_v2.SocketAddress{}
 		err = proto.Unmarshal(decodedKeyByte, key)
 		if err != nil {
-			return fmt.Errorf("unmarshal key failed :%v", err), nil
+			return nil, fmt.Errorf("unmarshal key failed :%v", err)
 		}
 
 		valueMsg := &listener_v2.Listener{}
 		err = proto.Unmarshal(req.Msg, valueMsg)
 		if err != nil {
-			return fmt.Errorf("Unmarshal listener failed:%v", err), nil
+			return nil, fmt.Errorf("Unmarshal listener failed:%v", err)
 		}
 		switch req.XdsOpt.Opt {
 		case pb.Opteration_UPDATE:
@@ -67,19 +67,19 @@ func handleRequest(req *pb.MsgRequest) (error, []byte) {
 			err = maps_v2.ListenerDelete(key)
 		}
 		if err != nil {
-			return err, nil
+			return nil, err
 		}
 		if valueMsg != nil {
 			Msg, err = proto.Marshal(valueMsg)
 		}
 		if err != nil {
-			return fmt.Errorf("marshal listener failed:%v", err), nil
+			return nil, fmt.Errorf("marshal listener failed:%v", err)
 		}
 	case pb.XdsNmae_Route:
 		valueMsg := &route_v2.RouteConfiguration{}
 		err := proto.Unmarshal(req.Msg, valueMsg)
 		if err != nil {
-			return err, nil
+			return nil, err
 		}
 		switch req.XdsOpt.Opt {
 		case pb.Opteration_UPDATE:
@@ -90,17 +90,17 @@ func handleRequest(req *pb.MsgRequest) (error, []byte) {
 			err = maps_v2.RouteConfigDelete(req.Key)
 		}
 		if err != nil {
-			return err, nil
+			return nil, err
 		}
 		Msg, err = proto.Marshal(valueMsg)
 	}
-	return err, Msg
+	return Msg, err
 }
 
 func (s *server) HandleMsg(ctx context.Context, req *pb.MsgRequest) (*pb.MsgResponse, error) {
 	log.Debugf("Received req.Name: %v", req.Key)
 
-	err, Msg := handleRequest(req)
+	Msg, err := handleRequest(req)
 	if err != nil {
 		return &pb.MsgResponse{ErrorCode: -1, Msg: Msg}, err
 	}
