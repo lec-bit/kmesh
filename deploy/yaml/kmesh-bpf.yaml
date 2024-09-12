@@ -88,6 +88,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
             - name: XDS_ADDRESS
               value: "istiod.istio-system.svc:15012"
             - name: BPF_LOG_SIZE
