@@ -17,7 +17,7 @@
 package bpfcache
 
 import (
-	"kmesh.net/kmesh/bpf/kmesh/bpf2go"
+	"github.com/lec-bit/my-code/normal/bpf2go"
 	"kmesh.net/kmesh/pkg/logger"
 )
 

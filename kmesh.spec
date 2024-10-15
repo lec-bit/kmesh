@@ -1,3 +1,6 @@
+%global debug_package %{nil}
+%global __strip /bin/true
+
 Name:          kmesh
 Version:       0.0.1
 Release:       1
@@ -60,8 +63,11 @@ install %{_builddir}/%{name}-%{version}/oncn-mda/etc/oncn-mda.conf %{buildroot}/
 mkdir -p %{buildroot}/usr/lib/systemd/system
 install %{_builddir}/%{name}-%{version}/build/kmesh.service %{buildroot}/usr/lib/systemd/system
 
-mkdir -p %{buildroot}/usr/share/kmesh
-find %{_builddir}/%{name}-%{version}/bpf/kmesh/bpf2go -type f ! -name 'bpf2go.go' -exec install -m 644 {} %{buildroot}/usr/share/kmesh \;
+mkdir -p %{buildroot}/usr/share/kmesh/normal/bpf2go
+mkdir -p %{buildroot}/usr/share/kmesh/enhanced/bpf2go
+find %{_builddir}/%{name}-%{version}/bpf/kmesh/bpf2go/normal/bpf2go -type f -name '*.o' -exec install -m 644 {} %{buildroot}/usr/share/kmesh/normal/bpf2go \;
+find %{_builddir}/%{name}-%{version}/bpf/kmesh/bpf2go/enhanced/bpf2go -type f -name '*.o' -exec install -m 644 {} %{buildroot}/usr/share/kmesh/enhanced/bpf2go \;
+#find %{_builddir}/%{name}-%{version}/bpf/kmesh/bpf2go -type f ! -name 'bpf2go.go' -exec install -m 644 {} %{buildroot}/usr/share/kmesh \;
 
 %check
 cd %{_builddir}/%{name}-%{version}

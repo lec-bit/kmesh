@@ -73,11 +73,11 @@ TMP_FILES := bpf/kmesh/bpf2go/bpf2go.go \
 	bpf/kmesh/ads/include/config.h \
 	bpf/include/bpf_helper_defs_ext.h
 
-.PHONY: all install uninstall clean build docker dataplane controller
+.PHONY: all install uninstall clean build docker data daemon
 
-all: dataplane controller
+all: data daemon
 
-dataplane:
+data:
 	$(QUIET) find $(ROOT_DIR)/mk -name "*.pc" | xargs sed -i "s#^prefix=.*#prefix=${ROOT_DIR}#g"
 	$(QUIET) make -C api/v2-c
 	$(QUIET) make -C bpf/deserialization_to_bpf_map
@@ -87,7 +87,7 @@ dataplane:
 	$(call printlog, BUILD, "kernel")
 	$(QUIET) make -C kernel/ko_src
 
-controller:
+daemon:
 	$(QUIET) find $(ROOT_DIR)/mk -name "*.pc" | xargs sed -i "s#^prefix=.*#prefix=${ROOT_DIR}#g"
 	$(call printlog, BUILD, $(APPS1))
 	$(QUIET) (export PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(ROOT_DIR)mk; \
