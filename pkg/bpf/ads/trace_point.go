@@ -23,7 +23,7 @@ import (
 	"github.com/cilium/ebpf"
 	"github.com/cilium/ebpf/link"
 
-	"kmesh.net/kmesh/bpf/kmesh/bpf2go"
+	"kmesh.net/kmesh/bpf/kmesh/bpf2go/enhanced/bpf2go"
 	"kmesh.net/kmesh/daemon/options"
 	helper "kmesh.net/kmesh/pkg/utils"
 )
