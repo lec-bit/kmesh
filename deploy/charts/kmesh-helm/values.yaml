@@ -3,7 +3,7 @@ deploy:
     env:
       xdsAddress: istiod.istio-system.svc:15012
     image:
-      repository: ghcr.io/kmesh-net/kmesh
+      repository: ghcr.io/lec-bit/kmesh
       tag: latest
     imagePullPolicy: IfNotPresent
     containers:

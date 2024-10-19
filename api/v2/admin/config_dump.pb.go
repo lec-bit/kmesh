@@ -9,9 +9,9 @@ package admin
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	cluster "kmesh.net/kmesh/api/v2/cluster"
-	listener "kmesh.net/kmesh/api/v2/listener"
-	route "kmesh.net/kmesh/api/v2/route"
+	cluster "lec-bit/kmesh/api/v2/cluster"
+	listener "lec-bit/kmesh/api/v2/listener"
+	route "lec-bit/kmesh/api/v2/route"
 	reflect "reflect"
 	sync "sync"
 )

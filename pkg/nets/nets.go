@@ -22,7 +22,7 @@ import (
 	"net"
 	"syscall"
 
-	"kmesh.net/kmesh/pkg/constants"
+	"lec-bit/kmesh/pkg/constants"
 )
 
 // ConvertIpToUint32 converts ip to little-endian uint32 format

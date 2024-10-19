@@ -30,7 +30,7 @@ NA
 
 ### Proposal
 
-As designed in [observability](https://github.com/kmesh-net/kmesh/blob/main/docs/proposal/observability.md), the following information needs to be reported in eBPF:
+As designed in [observability](https://github.com/lec-bit/kmesh/blob/main/docs/proposal/observability.md), the following information needs to be reported in eBPF:
 
 **access logs:**
 

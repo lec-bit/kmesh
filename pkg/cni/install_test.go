@@ -25,7 +25,7 @@ import (
 
 	"istio.io/istio/pkg/test/util/retry"
 
-	"kmesh.net/kmesh/pkg/constants"
+	"lec-bit/kmesh/pkg/constants"
 )
 
 func TestWatchTokenFile(t *testing.T) {

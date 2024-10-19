@@ -27,10 +27,10 @@ import (
 	"github.com/cilium/ebpf"
 	"github.com/cilium/ebpf/link"
 
-	"kmesh.net/kmesh/bpf/kmesh/bpf2go/enhanced/bpf2go"
-	"kmesh.net/kmesh/daemon/options"
-	"kmesh.net/kmesh/pkg/bpf/utils"
-	helper "kmesh.net/kmesh/pkg/utils"
+	"lec-bit/kmesh/bpf/kmesh/bpf2go/enhanced/bpf2go"
+	"lec-bit/kmesh/daemon/options"
+	"lec-bit/kmesh/pkg/bpf/utils"
+	helper "lec-bit/kmesh/pkg/utils"
 )
 
 type BpfSockOps struct {

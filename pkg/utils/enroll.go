@@ -27,9 +27,9 @@ import (
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/nets"
-	"kmesh.net/kmesh/pkg/utils/istio"
+	"lec-bit/kmesh/pkg/constants"
+	"lec-bit/kmesh/pkg/nets"
+	"lec-bit/kmesh/pkg/utils/istio"
 )
 
 // ShouldEnroll checks whether a pod should be managed by kmesh.

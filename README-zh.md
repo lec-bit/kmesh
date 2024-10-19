@@ -64,7 +64,7 @@ Kmesh创新性的提出将流量治理下沉OS，在数据路径上无需经过�
 
   - 支持内核增强的OS版本：
 
-    当前[openEuler 23.03](https://repo.openeuler.org/openEuler-23.03/)原生支持Kmesh所需的内核增强特性。Kmesh发布的镜像可以直接在该OS上安装运行。对于详细的支持内核增强的OS版本列表，请参见[链接](https://github.com/kmesh-net/kmesh/blob/main/docs/kmesh_support.md)。
+    当前[openEuler 23.03](https://repo.openeuler.org/openEuler-23.03/)原生支持Kmesh所需的内核增强特性。Kmesh发布的镜像可以直接在该OS上安装运行。对于详细的支持内核增强的OS版本列表，请参见[链接](https://github.com/lec-bit/kmesh/blob/main/docs/kmesh_support.md)。
   
   - 针对所有OS版本：
 
@@ -72,7 +72,7 @@ Kmesh创新性的提出将流量治理下沉OS，在数据路径上无需经过�
     
     
     
-    考虑到kmesh使用的通用性，我们也发布了用于kmesh编译构建的镜像。用户可以基于此镜像方便的制作出可以在当前OS版本上运行的kmesh镜像。默认命名为ghcr.io/kmesh-net/kmesh:latest，用户可自行调整，参考[Kmesh编译构建](docs/kmesh_compile-zh.md#docker image编译)
+    考虑到kmesh使用的通用性，我们也发布了用于kmesh编译构建的镜像。用户可以基于此镜像方便的制作出可以在当前OS版本上运行的kmesh镜像。默认命名为ghcr.io/lec-bit/kmesh:latest，用户可自行调整，参考[Kmesh编译构建](docs/kmesh_compile-zh.md#docker image编译)
   
     ```bash
     make docker TAG=latest
@@ -80,7 +80,7 @@ Kmesh创新性的提出将流量治理下沉OS，在数据路径上无需经过�
   
 - 启动Kmesh容器
 
-  默认使用名为 ghcr.io/kmesh-net/kmesh:latest的镜像，如需使用兼容模式或其他版本可自行修改
+  默认使用名为 ghcr.io/lec-bit/kmesh:latest的镜像，如需使用兼容模式或其他版本可自行修改
 
   -  Helm安装方式
   

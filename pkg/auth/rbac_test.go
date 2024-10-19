@@ -29,12 +29,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"istio.io/istio/pkg/util/sets"
 
-	"kmesh.net/kmesh/api/v2/workloadapi"
-	"kmesh.net/kmesh/api/v2/workloadapi/security"
-	"kmesh.net/kmesh/daemon/options"
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/controller/workload/cache"
-	"kmesh.net/kmesh/pkg/utils/test"
+	"lec-bit/kmesh/api/v2/workloadapi"
+	"lec-bit/kmesh/api/v2/workloadapi/security"
+	"lec-bit/kmesh/daemon/options"
+	"lec-bit/kmesh/pkg/constants"
+	"lec-bit/kmesh/pkg/controller/workload/cache"
+	"lec-bit/kmesh/pkg/utils/test"
 )
 
 const (

@@ -29,14 +29,14 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	cluster_v2 "kmesh.net/kmesh/api/v2/cluster"
-	core_v2 "kmesh.net/kmesh/api/v2/core"
-	endpoint_v2 "kmesh.net/kmesh/api/v2/endpoint"
-	filter_v2 "kmesh.net/kmesh/api/v2/filter"
-	listener_v2 "kmesh.net/kmesh/api/v2/listener"
-	route_v2 "kmesh.net/kmesh/api/v2/route"
-	cache_v2 "kmesh.net/kmesh/pkg/cache/v2"
-	"kmesh.net/kmesh/pkg/nets"
+	cluster_v2 "lec-bit/kmesh/api/v2/cluster"
+	core_v2 "lec-bit/kmesh/api/v2/core"
+	endpoint_v2 "lec-bit/kmesh/api/v2/endpoint"
+	filter_v2 "lec-bit/kmesh/api/v2/filter"
+	listener_v2 "lec-bit/kmesh/api/v2/listener"
+	route_v2 "lec-bit/kmesh/api/v2/route"
+	cache_v2 "lec-bit/kmesh/pkg/cache/v2"
+	"lec-bit/kmesh/pkg/nets"
 )
 
 type AdsCache struct {

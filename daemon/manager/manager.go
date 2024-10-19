@@ -27,14 +27,14 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"kmesh.net/kmesh/daemon/manager/uninstall"
-	"kmesh.net/kmesh/daemon/options"
-	"kmesh.net/kmesh/pkg/bpf"
-	"kmesh.net/kmesh/pkg/bpf/restart"
-	"kmesh.net/kmesh/pkg/cni"
-	"kmesh.net/kmesh/pkg/controller"
-	"kmesh.net/kmesh/pkg/logger"
-	"kmesh.net/kmesh/pkg/status"
+	"lec-bit/kmesh/daemon/manager/uninstall"
+	"lec-bit/kmesh/daemon/options"
+	"lec-bit/kmesh/pkg/bpf"
+	"lec-bit/kmesh/pkg/bpf/restart"
+	"lec-bit/kmesh/pkg/cni"
+	"lec-bit/kmesh/pkg/controller"
+	"lec-bit/kmesh/pkg/logger"
+	"lec-bit/kmesh/pkg/status"
 )
 
 const (
@@ -81,7 +81,7 @@ func Execute(configs *options.BootstrapConfigs) error {
 
 	bpfLoader := bpf.NewBpfLoader(configs.BpfConfig)
 	// there could be a case that bpf loader partially start failed, we still need to stop it, otherwise it cannot recover
-	// https://github.com/kmesh-net/kmesh/issues/951
+	// https://github.com/lec-bit/kmesh/issues/951
 	defer bpfLoader.Stop()
 	if err := bpfLoader.Start(); err != nil {
 		return err

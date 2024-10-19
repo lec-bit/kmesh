@@ -19,7 +19,7 @@ package cache
 import (
 	"sync"
 
-	"kmesh.net/kmesh/api/v2/workloadapi"
+	"lec-bit/kmesh/api/v2/workloadapi"
 )
 
 type ServiceCache interface {

@@ -1,4 +1,4 @@
-module kmesh.net/kmesh
+module github.com/lec-bit/kmesh
 
 go 1.23.2
 

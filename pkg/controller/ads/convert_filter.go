@@ -19,7 +19,7 @@ package ads
 import (
 	envoy_filters_tcp_proxy "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/tcp_proxy/v3"
 
-	"kmesh.net/kmesh/api/v2/filter"
+	"lec-bit/kmesh/api/v2/filter"
 )
 
 func newFilterTcpProxy(envoyTcpProxy *envoy_filters_tcp_proxy.TcpProxy) *filter.TcpProxy {

@@ -25,9 +25,9 @@ import (
 	"github.com/cilium/ebpf/rlimit"
 	"github.com/stretchr/testify/assert"
 
-	"kmesh.net/kmesh/daemon/options"
-	"kmesh.net/kmesh/pkg/bpf/restart"
-	"kmesh.net/kmesh/pkg/constants"
+	"lec-bit/kmesh/daemon/options"
+	"lec-bit/kmesh/pkg/bpf/restart"
+	"lec-bit/kmesh/pkg/constants"
 )
 
 func TestRestart(t *testing.T) {

@@ -22,15 +22,15 @@ import (
 	"reflect"
 	"syscall"
 
-	"kmesh.net/kmesh/pkg/bpf/utils"
+	"lec-bit/kmesh/pkg/bpf/utils"
 
 	"github.com/cilium/ebpf"
 	"github.com/cilium/ebpf/link"
 
-	"kmesh.net/kmesh/bpf/kmesh/bpf2go/normal/bpf2go"
-	"kmesh.net/kmesh/daemon/options"
-	"kmesh.net/kmesh/pkg/constants"
-	helper "kmesh.net/kmesh/pkg/utils"
+	"lec-bit/kmesh/bpf/kmesh/bpf2go/normal/bpf2go"
+	"lec-bit/kmesh/daemon/options"
+	"lec-bit/kmesh/pkg/constants"
+	helper "lec-bit/kmesh/pkg/utils"
 )
 
 type BpfXdpAuthWorkload struct {

@@ -40,7 +40,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd/api/latest"
 	"sigs.k8s.io/yaml"
 
-	"kmesh.net/kmesh/pkg/utils"
+	"lec-bit/kmesh/pkg/utils"
 )
 
 func createKubeConfig(serviceAccountPath string) (string, error) {

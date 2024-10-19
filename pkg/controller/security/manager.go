@@ -23,8 +23,8 @@ import (
 	istiosecurity "istio.io/istio/pkg/security"
 	"k8s.io/client-go/util/workqueue"
 
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/logger"
+	"lec-bit/kmesh/pkg/constants"
+	"lec-bit/kmesh/pkg/logger"
 )
 
 var log = logger.NewLoggerScope("security")

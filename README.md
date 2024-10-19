@@ -1,6 +1,6 @@
 <img src="docs/pics/logo/KMESH-horizontal-colour.png" alt="kmesh-logo" style="zoom: 100%;" />
 
-[![LICENSE](https://img.shields.io/github/license/kmesh-net/kmesh)](/LICENSE) [![codecov](https://codecov.io/gh/kmesh-net/kmesh/graph/badge.svg?token=0EGQ84FGDU)](https://codecov.io/gh/kmesh-net/kmesh) 
+[![LICENSE](https://img.shields.io/github/license/lec-bit/kmesh)](/LICENSE) [![codecov](https://codecov.io/gh/lec-bit/kmesh/graph/badge.svg?token=0EGQ84FGDU)](https://codecov.io/gh/lec-bit/kmesh) 
 
 ## Introduction
 

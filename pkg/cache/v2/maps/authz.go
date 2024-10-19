@@ -27,7 +27,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	security_v2 "kmesh.net/kmesh/api/v2/workloadapi/security"
+	security_v2 "lec-bit/kmesh/api/v2/workloadapi/security"
 )
 
 func authorizationToGolang(goMsg *security_v2.Authorization, cMsg *C.Istio__Security__Authorization) error {

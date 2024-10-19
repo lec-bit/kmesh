@@ -28,14 +28,14 @@ import (
 	"istio.io/istio/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/rand"
 
-	"kmesh.net/kmesh/api/v2/workloadapi"
-	"kmesh.net/kmesh/daemon/options"
-	"kmesh.net/kmesh/pkg/bpf/restart"
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/controller/workload/bpfcache"
-	"kmesh.net/kmesh/pkg/controller/workload/cache"
-	"kmesh.net/kmesh/pkg/nets"
-	"kmesh.net/kmesh/pkg/utils/test"
+	"lec-bit/kmesh/api/v2/workloadapi"
+	"lec-bit/kmesh/daemon/options"
+	"lec-bit/kmesh/pkg/bpf/restart"
+	"lec-bit/kmesh/pkg/constants"
+	"lec-bit/kmesh/pkg/controller/workload/bpfcache"
+	"lec-bit/kmesh/pkg/controller/workload/cache"
+	"lec-bit/kmesh/pkg/nets"
+	"lec-bit/kmesh/pkg/utils/test"
 )
 
 func Test_handleWorkload(t *testing.T) {

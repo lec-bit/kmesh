@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package listener;
-option go_package = "kmesh.net/kmesh/api/listener;listener";
+option go_package = "lec-bit/kmesh/api/listener;listener";
 
 import "api/core/address.proto";
 import "api/filter/tcp_proxy.proto";

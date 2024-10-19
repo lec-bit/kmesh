@@ -28,7 +28,7 @@ import (
 
 	"github.com/containernetworking/cni/libcni"
 
-	"kmesh.net/kmesh/pkg/utils"
+	"lec-bit/kmesh/pkg/utils"
 )
 
 const (

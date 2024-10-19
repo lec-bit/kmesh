@@ -27,8 +27,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"kmesh.net/kmesh/ctl/utils"
-	"kmesh.net/kmesh/pkg/logger"
+	"lec-bit/kmesh/ctl/utils"
+	"lec-bit/kmesh/pkg/logger"
 )
 
 const (

@@ -25,7 +25,7 @@ import (
 	"github.com/containernetworking/cni/libcni"
 	"github.com/containernetworking/cni/pkg/types"
 
-	"kmesh.net/kmesh/pkg/constants"
+	"lec-bit/kmesh/pkg/constants"
 )
 
 type opts struct {

@@ -25,7 +25,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"istio.io/istio/pkg/security"
 
-	camock "kmesh.net/kmesh/pkg/controller/security/mock"
+	camock "lec-bit/kmesh/pkg/controller/security/mock"
 )
 
 func (s *SecretManager) GetCert(identity string) *certItem {

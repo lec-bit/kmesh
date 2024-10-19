@@ -21,11 +21,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"kmesh.net/kmesh/ctl/accesslog"
-	"kmesh.net/kmesh/ctl/dump"
-	logcmd "kmesh.net/kmesh/ctl/log"
-	"kmesh.net/kmesh/ctl/version"
-	"kmesh.net/kmesh/ctl/waypoint"
+	"lec-bit/kmesh/ctl/accesslog"
+	"lec-bit/kmesh/ctl/dump"
+	logcmd "lec-bit/kmesh/ctl/log"
+	"lec-bit/kmesh/ctl/version"
+	"lec-bit/kmesh/ctl/waypoint"
 )
 
 func main() {

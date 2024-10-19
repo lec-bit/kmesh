@@ -19,8 +19,8 @@ package bpfcache
 import (
 	"istio.io/istio/pkg/util/sets"
 
-	"kmesh.net/kmesh/bpf/kmesh/bpf2go/normal/bpf2go"
-	"kmesh.net/kmesh/pkg/logger"
+	"lec-bit/kmesh/bpf/kmesh/bpf2go/normal/bpf2go"
+	"lec-bit/kmesh/pkg/logger"
 )
 
 var log = logger.NewLoggerScope("workload_bpfcache")

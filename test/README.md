@@ -47,7 +47,7 @@ Kmesh基于mugen实现了测试框架，主要用于开发阶段，对Kmesh的�
   - 下载Kmesh代码
 
     ```sh
-    # git clone https://github.com/kmesh-net/kmesh.git
+    # git clone https://github.com/lec-bit/kmesh.git
     ```
 
 - 执行Kmesh测试框架

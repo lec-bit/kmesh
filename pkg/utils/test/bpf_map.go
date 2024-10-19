@@ -23,8 +23,8 @@ import (
 
 	"github.com/cilium/ebpf/rlimit"
 
-	"kmesh.net/kmesh/daemon/options"
-	"kmesh.net/kmesh/pkg/bpf"
+	"lec-bit/kmesh/daemon/options"
+	"lec-bit/kmesh/pkg/bpf"
 )
 
 type CleanupFn func()

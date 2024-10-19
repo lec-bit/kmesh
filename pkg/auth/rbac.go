@@ -29,11 +29,11 @@ import (
 	"github.com/cilium/ebpf"
 	"github.com/cilium/ebpf/ringbuf"
 
-	"kmesh.net/kmesh/api/v2/workloadapi"
-	"kmesh.net/kmesh/api/v2/workloadapi/security"
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/controller/workload/cache"
-	"kmesh.net/kmesh/pkg/logger"
+	"lec-bit/kmesh/api/v2/workloadapi"
+	"lec-bit/kmesh/api/v2/workloadapi/security"
+	"lec-bit/kmesh/pkg/constants"
+	"lec-bit/kmesh/pkg/controller/workload/cache"
+	"lec-bit/kmesh/pkg/logger"
 )
 
 const (

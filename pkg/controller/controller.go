@@ -20,15 +20,15 @@ import (
 	"context"
 	"fmt"
 
-	"kmesh.net/kmesh/daemon/options"
-	bpfwl "kmesh.net/kmesh/pkg/bpf/workload"
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/controller/bypass"
-	manage "kmesh.net/kmesh/pkg/controller/manage"
-	"kmesh.net/kmesh/pkg/controller/security"
-	"kmesh.net/kmesh/pkg/dns"
-	"kmesh.net/kmesh/pkg/logger"
-	"kmesh.net/kmesh/pkg/utils"
+	"lec-bit/kmesh/daemon/options"
+	bpfwl "lec-bit/kmesh/pkg/bpf/workload"
+	"lec-bit/kmesh/pkg/constants"
+	"lec-bit/kmesh/pkg/controller/bypass"
+	manage "lec-bit/kmesh/pkg/controller/manage"
+	"lec-bit/kmesh/pkg/controller/security"
+	"lec-bit/kmesh/pkg/dns"
+	"lec-bit/kmesh/pkg/logger"
+	"lec-bit/kmesh/pkg/utils"
 )
 
 var (

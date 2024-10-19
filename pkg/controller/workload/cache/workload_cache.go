@@ -20,7 +20,7 @@ import (
 	"net/netip"
 	"sync"
 
-	"kmesh.net/kmesh/api/v2/workloadapi"
+	"lec-bit/kmesh/api/v2/workloadapi"
 )
 
 type WorkloadCache interface {

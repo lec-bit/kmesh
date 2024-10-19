@@ -29,13 +29,13 @@ import (
 
 	"github.com/cilium/ebpf"
 
-	"kmesh.net/kmesh/daemon/options"
-	"kmesh.net/kmesh/pkg/bpf/ads"
-	"kmesh.net/kmesh/pkg/bpf/restart"
-	"kmesh.net/kmesh/pkg/bpf/workload"
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/logger"
-	"kmesh.net/kmesh/pkg/version"
+	"lec-bit/kmesh/daemon/options"
+	"lec-bit/kmesh/pkg/bpf/ads"
+	"lec-bit/kmesh/pkg/bpf/restart"
+	"lec-bit/kmesh/pkg/bpf/workload"
+	"lec-bit/kmesh/pkg/constants"
+	"lec-bit/kmesh/pkg/logger"
+	"lec-bit/kmesh/pkg/version"
 )
 
 var (

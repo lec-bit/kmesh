@@ -30,9 +30,9 @@ import (
 	"github.com/vishvananda/netlink"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/logger"
-	"kmesh.net/kmesh/pkg/utils"
+	"lec-bit/kmesh/pkg/constants"
+	"lec-bit/kmesh/pkg/logger"
+	"lec-bit/kmesh/pkg/utils"
 )
 
 var (

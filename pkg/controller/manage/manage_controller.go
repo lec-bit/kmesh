@@ -33,12 +33,12 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
-	"kmesh.net/kmesh/pkg/constants"
-	ns "kmesh.net/kmesh/pkg/controller/netns"
-	kmeshsecurity "kmesh.net/kmesh/pkg/controller/security"
-	"kmesh.net/kmesh/pkg/kube"
-	"kmesh.net/kmesh/pkg/logger"
-	"kmesh.net/kmesh/pkg/utils"
+	"lec-bit/kmesh/pkg/constants"
+	ns "lec-bit/kmesh/pkg/controller/netns"
+	kmeshsecurity "lec-bit/kmesh/pkg/controller/security"
+	"lec-bit/kmesh/pkg/kube"
+	"lec-bit/kmesh/pkg/logger"
+	"lec-bit/kmesh/pkg/utils"
 )
 
 var log = logger.NewLoggerScope("manage_controller")

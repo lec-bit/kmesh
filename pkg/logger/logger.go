@@ -29,7 +29,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
 
-	"kmesh.net/kmesh/pkg/constants"
+	"lec-bit/kmesh/pkg/constants"
 )
 
 const (

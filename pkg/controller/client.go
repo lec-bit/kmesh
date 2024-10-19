@@ -25,12 +25,12 @@ import (
 	"google.golang.org/grpc"
 	istiogrpc "istio.io/istio/pilot/pkg/grpc"
 
-	bpfwl "kmesh.net/kmesh/pkg/bpf/workload"
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/controller/ads"
-	"kmesh.net/kmesh/pkg/controller/config"
-	"kmesh.net/kmesh/pkg/controller/workload"
-	"kmesh.net/kmesh/pkg/nets"
+	bpfwl "lec-bit/kmesh/pkg/bpf/workload"
+	"lec-bit/kmesh/pkg/constants"
+	"lec-bit/kmesh/pkg/controller/ads"
+	"lec-bit/kmesh/pkg/controller/config"
+	"lec-bit/kmesh/pkg/controller/workload"
+	"lec-bit/kmesh/pkg/nets"
 )
 
 const (

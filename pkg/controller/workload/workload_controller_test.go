@@ -28,14 +28,14 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	cluster_v2 "kmesh.net/kmesh/api/v2/cluster"
-	core_v2 "kmesh.net/kmesh/api/v2/core"
-	"kmesh.net/kmesh/api/v2/workloadapi"
-	"kmesh.net/kmesh/api/v2/workloadapi/security"
-	"kmesh.net/kmesh/pkg/auth"
-	maps_v2 "kmesh.net/kmesh/pkg/cache/v2/maps"
-	"kmesh.net/kmesh/pkg/controller/workload/bpfcache"
-	"kmesh.net/kmesh/pkg/controller/xdstest"
+	cluster_v2 "lec-bit/kmesh/api/v2/cluster"
+	core_v2 "lec-bit/kmesh/api/v2/core"
+	"lec-bit/kmesh/api/v2/workloadapi"
+	"lec-bit/kmesh/api/v2/workloadapi/security"
+	"lec-bit/kmesh/pkg/auth"
+	maps_v2 "lec-bit/kmesh/pkg/cache/v2/maps"
+	"lec-bit/kmesh/pkg/controller/workload/bpfcache"
+	"lec-bit/kmesh/pkg/controller/xdstest"
 )
 
 func TestWorkloadStreamCreateAndSend(t *testing.T) {

@@ -78,7 +78,7 @@ EOF
 EOF
     done
 
-    # For KinD environment we need to mount bpf for each node, ref: https://github.com/kmesh-net/kmesh/issues/662
+    # For KinD environment we need to mount bpf for each node, ref: https://github.com/lec-bit/kmesh/issues/662
     for node in $(kind get nodes --name="${NAME}"); do
         docker exec "${node}" sh -c "mount -t bpf none /sys/fs/bpf"
     done

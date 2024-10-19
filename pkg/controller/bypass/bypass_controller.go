@@ -26,11 +26,11 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 
-	ns "kmesh.net/kmesh/pkg/controller/netns"
-	"kmesh.net/kmesh/pkg/kube"
-	"kmesh.net/kmesh/pkg/logger"
-	"kmesh.net/kmesh/pkg/utils"
-	"kmesh.net/kmesh/pkg/utils/istio"
+	ns "lec-bit/kmesh/pkg/controller/netns"
+	"lec-bit/kmesh/pkg/kube"
+	"lec-bit/kmesh/pkg/logger"
+	"lec-bit/kmesh/pkg/utils"
+	"lec-bit/kmesh/pkg/utils/istio"
 )
 
 var (

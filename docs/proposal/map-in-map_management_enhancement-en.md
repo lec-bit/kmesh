@@ -22,7 +22,7 @@ In ads mode, elastic scaling based on map-in-map records is supported to meet th
 
 ### Motivation
 
-As mentioned in [optimizing_bpf_map_update_in_xDS_mode](https://github.com/kmesh-net/kmesh/blob/main/docs/proposal/optimizing_bpf_map_update_in_xDS_mode-en.md), to solve the problem of slow update of map-in-map records, Kmesh creates all records at a time during startup by exchanging space for time. This problem does not occur in small-scale cluster scenarios, however, when a large-scale cluster (for example, 5000 services and 100,000 pods) is supported, the size defined in the map-in-map table is very large, and the map of the `BPF_MAP_TYPE_ARRAY_OF_MAPS` type does not support `BPF_F_NO_PREALLOC`, which causes a great waste of memory. Elastic scaling of map-in-map records must be supported to meet the traffic management requirements of large-scale clusters.
+As mentioned in [optimizing_bpf_map_update_in_xDS_mode](https://github.com/lec-bit/kmesh/blob/main/docs/proposal/optimizing_bpf_map_update_in_xDS_mode-en.md), to solve the problem of slow update of map-in-map records, Kmesh creates all records at a time during startup by exchanging space for time. This problem does not occur in small-scale cluster scenarios, however, when a large-scale cluster (for example, 5000 services and 100,000 pods) is supported, the size defined in the map-in-map table is very large, and the map of the `BPF_MAP_TYPE_ARRAY_OF_MAPS` type does not support `BPF_F_NO_PREALLOC`, which causes a great waste of memory. Elastic scaling of map-in-map records must be supported to meet the traffic management requirements of large-scale clusters.
 
 #### Goals
 

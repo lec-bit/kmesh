@@ -45,8 +45,8 @@ import (
 	gateway "sigs.k8s.io/gateway-api/apis/v1"
 	"sigs.k8s.io/yaml"
 
-	"kmesh.net/kmesh/ctl/utils"
-	"kmesh.net/kmesh/pkg/version"
+	"lec-bit/kmesh/ctl/utils"
+	"lec-bit/kmesh/pkg/version"
 )
 
 var (

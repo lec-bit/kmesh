@@ -24,8 +24,8 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"istio.io/istio/pkg/filewatcher"
 
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/logger"
+	"lec-bit/kmesh/pkg/constants"
+	"lec-bit/kmesh/pkg/logger"
 )
 
 var log = logger.NewLoggerScope("cni installer")

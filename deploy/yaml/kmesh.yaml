@@ -69,7 +69,7 @@ spec:
                   path: istio-token
       containers:
         - name: kmesh
-          image: ghcr.io/kmesh-net/kmesh:latest
+          image: ghcr.io/lec-bit/kmesh:latest
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh", "-c"]
           args:

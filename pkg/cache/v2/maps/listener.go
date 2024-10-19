@@ -27,9 +27,9 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	core_v2 "kmesh.net/kmesh/api/v2/core"
-	listener_v2 "kmesh.net/kmesh/api/v2/listener"
-	"kmesh.net/kmesh/pkg/logger"
+	core_v2 "lec-bit/kmesh/api/v2/core"
+	listener_v2 "lec-bit/kmesh/api/v2/listener"
+	"lec-bit/kmesh/pkg/logger"
 )
 
 var (

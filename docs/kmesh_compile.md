@@ -19,7 +19,7 @@ The Kmesh needs to be compiled and built in the Linux environment with the Kmesh
   Note: The `kmesh-build` image needs to match the version of the source code.
   
   ```
-  docker pull ghcr.io/kmesh-net/kmesh-build:latest
+  docker pull ghcr.io/lec-bit/kmesh-build:latest
   ```
 
 ### build from source
@@ -27,7 +27,7 @@ The Kmesh needs to be compiled and built in the Linux environment with the Kmesh
 - Code download
 
   ```sh
-  [root@ ~]# git clone https://github.com/kmesh-net/kmesh.git
+  [root@ ~]# git clone https://github.com/lec-bit/kmesh.git
   ```
 
 - Code compilation
@@ -61,11 +61,11 @@ The Kmesh needs to be compiled and built in the Linux environment with the Kmesh
   
   [root@localhost kmesh]# make docker
   ...
-  Successfully tagged ghcr.io/kmesh-net/kmesh:b68790eb07830e757f4ce6d1c478d0046ee79730
+  Successfully tagged ghcr.io/lec-bit/kmesh:b68790eb07830e757f4ce6d1c478d0046ee79730
   
   [root@localhost kmesh]# make docker HUB=ghcr.io/kmesh-net TARGET=kmesh TAG=latest
   ...
-  Successfully tagged ghcr.io/kmesh-net/kmesh:latest
+  Successfully tagged ghcr.io/lec-bit/kmesh:latest
   ```
   
   Check the existing Kmesh image in the local image repository：
@@ -73,7 +73,7 @@ The Kmesh needs to be compiled and built in the Linux environment with the Kmesh
   ```sh
   [root@dev docker]# docker images
   REPOSITORY                          TAG                                        IMAGE ID            CREATED             SIZE
-  ghcr.io/kmesh-net/kmesh             v0.2.0                                     71aec5898c44        10 days ago         457MB
+  ghcr.io/lec-bit/kmesh             v0.2.0                                     71aec5898c44        10 days ago         457MB
   ```
 ### Compilation cleanup
 

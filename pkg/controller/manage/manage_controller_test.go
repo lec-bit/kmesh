@@ -39,8 +39,8 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/cache"
 
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/utils"
+	"lec-bit/kmesh/pkg/constants"
+	"lec-bit/kmesh/pkg/utils"
 )
 
 var (

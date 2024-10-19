@@ -14,7 +14,7 @@ function run_docker_container() {
         -v "$(go env GOCACHE)":/root/.cache/go-build \
         -v "$(go env GOMODCACHE)":/go/pkg/mod \
         -e PKG_CONFIG_PATH=/kmesh/mk \
-        --name kmesh-build "ghcr.io/kmesh-net/kmesh-build:latest")
+        --name kmesh-build "ghcr.io/lec-bit/kmesh-build:latest")
 
     echo "$container_id"
 }

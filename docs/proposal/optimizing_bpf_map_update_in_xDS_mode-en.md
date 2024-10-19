@@ -25,18 +25,18 @@ Kmesh is a grid-based data plane governance forwarding system implemented with e
 
 During xDS configuration updates, the performance of eBPF map refresh is poor, resulting in delayed responsiveness to xDS changes notified by Istiod. For example, the time taken for a single routeconfig update is in the order of seconds. Performance analysis profiling revealed that the add and delete operations on the outter_map table (ARRAY_OF_MAPS) are relatively slow, with measured time cost of approximately 5ms for each record addition or deletion. The main reason for this is the [synchronous operations](https://github.com/torvalds/linux/commit/1ae80cf31938c8f77c37a29bbe29e7f1cd492be8) involved in the add and delete processes of this type of map.
 
-[Unit testing](https://github.com/kmesh-net/kmesh/blob/1ae49ce4b623bc888ad2386d9acbc531d6c62d67/pkg/cache/v2/cluster_test.go#L180) eBPF map refresh latency:
+[Unit testing](https://github.com/lec-bit/kmesh/blob/1ae49ce4b623bc888ad2386d9acbc531d6c62d67/pkg/cache/v2/cluster_test.go#L180) eBPF map refresh latency:
 
 ```sh
 [root@localhost v2]# go test -bench=. --benchtime=100x
 goos: linux
 goarch: amd64
-pkg: kmesh.net/kmesh/pkg/cache/v2
+pkg: lec-bit/kmesh/pkg/cache/v2
 cpu: Intel(R) Xeon(R) CPU E5-2690 v3 @ 2.60GHz
 BenchmarkClusterFlush-16             100         835615271 ns/op
 BenchmarkFlush-16                    100        1595920212 ns/op
 PASS
-ok      kmesh.net/kmesh/pkg/cache/v2    245.370s
+ok      lec-bit/kmesh/pkg/cache/v2    245.370s
 [root@localhost v2]#
 ```
 
@@ -99,12 +99,12 @@ Performance test results of the optimization strategy：
 [root@localhost v2]# go test -bench=. --benchtime=100x
 goos: linux
 goarch: amd64
-pkg: kmesh.net/kmesh/pkg/cache/v2
+pkg: lec-bit/kmesh/pkg/cache/v2
 cpu: Intel(R) Xeon(R) CPU E5-2690 v3 @ 2.60GHz
 BenchmarkClusterFlush-16             100            600145 ns/op
 BenchmarkFlush-16                    100            283194 ns/op
 PASS
-ok      kmesh.net/kmesh/pkg/cache/v2    4.047s
+ok      lec-bit/kmesh/pkg/cache/v2    4.047s
 ```
 
 

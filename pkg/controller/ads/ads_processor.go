@@ -30,11 +30,11 @@ import (
 	"istio.io/istio/pkg/slices"
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	admin_v2 "kmesh.net/kmesh/api/v2/admin"
-	core_v2 "kmesh.net/kmesh/api/v2/core"
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/controller/config"
-	"kmesh.net/kmesh/pkg/utils/hash"
+	admin_v2 "lec-bit/kmesh/api/v2/admin"
+	core_v2 "lec-bit/kmesh/api/v2/core"
+	"lec-bit/kmesh/pkg/constants"
+	"lec-bit/kmesh/pkg/controller/config"
+	"lec-bit/kmesh/pkg/utils/hash"
 )
 
 const (

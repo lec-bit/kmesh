@@ -22,7 +22,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"kmesh.net/kmesh/api/v2/workloadapi"
+	"lec-bit/kmesh/api/v2/workloadapi"
 )
 
 func TestAddOrUpdateWorkload(t *testing.T) {

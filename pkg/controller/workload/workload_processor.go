@@ -28,19 +28,19 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"istio.io/istio/pkg/util/sets"
 
-	"kmesh.net/kmesh/api/v2/workloadapi"
-	"kmesh.net/kmesh/api/v2/workloadapi/security"
-	security_v2 "kmesh.net/kmesh/api/v2/workloadapi/security"
-	"kmesh.net/kmesh/bpf/kmesh/bpf2go/normal/bpf2go"
-	"kmesh.net/kmesh/pkg/auth"
-	kmeshbpf "kmesh.net/kmesh/pkg/bpf/restart"
-	maps_v2 "kmesh.net/kmesh/pkg/cache/v2/maps"
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/controller/config"
-	"kmesh.net/kmesh/pkg/controller/telemetry"
-	bpf "kmesh.net/kmesh/pkg/controller/workload/bpfcache"
-	"kmesh.net/kmesh/pkg/controller/workload/cache"
-	"kmesh.net/kmesh/pkg/nets"
+	"lec-bit/kmesh/api/v2/workloadapi"
+	"lec-bit/kmesh/api/v2/workloadapi/security"
+	security_v2 "lec-bit/kmesh/api/v2/workloadapi/security"
+	"lec-bit/kmesh/bpf/kmesh/bpf2go/normal/bpf2go"
+	"lec-bit/kmesh/pkg/auth"
+	kmeshbpf "lec-bit/kmesh/pkg/bpf/restart"
+	maps_v2 "lec-bit/kmesh/pkg/cache/v2/maps"
+	"lec-bit/kmesh/pkg/constants"
+	"lec-bit/kmesh/pkg/controller/config"
+	"lec-bit/kmesh/pkg/controller/telemetry"
+	bpf "lec-bit/kmesh/pkg/controller/workload/bpfcache"
+	"lec-bit/kmesh/pkg/controller/workload/cache"
+	"lec-bit/kmesh/pkg/nets"
 )
 
 const (
@@ -383,7 +383,7 @@ func (p *Processor) updateWorkload(workload *workloadapi.Workload) error {
 		}
 
 		// we should not store frontend data of hostname network mode pods
-		// please see https://github.com/kmesh-net/kmesh/issues/631
+		// please see https://github.com/lec-bit/kmesh/issues/631
 		if networkMode != workloadapi.NetworkMode_HOST_NETWORK {
 			if err = p.storePodFrontendData(uid, ip); err != nil {
 				log.Errorf("storePodFrontendData failed, err:%s", err)
@@ -525,7 +525,7 @@ func (p *Processor) handleService(service *workloadapi.Service) error {
 	if service.Waypoint != nil && service.GetWaypoint().GetAddress() != nil && len(service.Addresses) != 0 {
 		// Currently istiod only set the waypoint address to the first address of the service
 		// When waypoints of different granularities are deployed together, the only waypoint service to be determined
-		// is whether it contains port 15021, ref: https://github.com/kmesh-net/kmesh/issues/691
+		// is whether it contains port 15021, ref: https://github.com/lec-bit/kmesh/issues/691
 		// TODO: remove when upstream istiod will not set the waypoint address for itself
 		if slices.Equal(service.GetWaypoint().GetAddress().Address, service.Addresses[0].Address) || containsPort(15021) {
 			service.Waypoint = nil

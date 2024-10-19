@@ -22,7 +22,7 @@ import (
 
 	"istio.io/istio/pkg/util/sets"
 
-	"kmesh.net/kmesh/api/v2/workloadapi/security"
+	"lec-bit/kmesh/api/v2/workloadapi/security"
 )
 
 type policyStore struct {

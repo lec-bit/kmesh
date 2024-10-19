@@ -19,7 +19,7 @@ package status
 import (
 	"net"
 
-	"kmesh.net/kmesh/api/v2/workloadapi"
+	"lec-bit/kmesh/api/v2/workloadapi"
 )
 
 type Workload struct {

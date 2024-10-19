@@ -28,11 +28,11 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	bpfwl "kmesh.net/kmesh/pkg/bpf/workload"
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/controller/workload"
-	"kmesh.net/kmesh/pkg/controller/xdstest"
-	"kmesh.net/kmesh/pkg/nets"
+	bpfwl "lec-bit/kmesh/pkg/bpf/workload"
+	"lec-bit/kmesh/pkg/constants"
+	"lec-bit/kmesh/pkg/controller/workload"
+	"lec-bit/kmesh/pkg/controller/xdstest"
+	"lec-bit/kmesh/pkg/nets"
 )
 
 func TestRecoverConnection(t *testing.T) {

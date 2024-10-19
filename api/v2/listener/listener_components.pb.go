@@ -9,8 +9,8 @@ package listener
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	core "kmesh.net/kmesh/api/v2/core"
-	filter "kmesh.net/kmesh/api/v2/filter"
+	core "lec-bit/kmesh/api/v2/core"
+	filter "lec-bit/kmesh/api/v2/filter"
 	reflect "reflect"
 	sync "sync"
 )

@@ -24,9 +24,9 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	cluster_v2 "kmesh.net/kmesh/api/v2/cluster"
-	core_v2 "kmesh.net/kmesh/api/v2/core"
-	maps_v2 "kmesh.net/kmesh/pkg/cache/v2/maps"
+	cluster_v2 "lec-bit/kmesh/api/v2/cluster"
+	core_v2 "lec-bit/kmesh/api/v2/core"
+	maps_v2 "lec-bit/kmesh/pkg/cache/v2/maps"
 )
 
 type ClusterCache struct {

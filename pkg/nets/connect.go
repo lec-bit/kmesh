@@ -26,7 +26,7 @@ import (
 	"istio.io/istio/security/pkg/credentialfetcher"
 	"istio.io/istio/security/pkg/nodeagent/caclient"
 
-	"kmesh.net/kmesh/pkg/constants"
+	"lec-bit/kmesh/pkg/constants"
 )
 
 const (

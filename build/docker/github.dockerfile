@@ -1,4 +1,4 @@
-FROM ghcr.io/kmesh-net/kmesh-build:latest AS builder
+FROM ghcr.io/lec-bit/kmesh-build:latest AS builder
 COPY . /kmesh
 WORKDIR /kmesh
 RUN ./build.sh && ./build.sh -i

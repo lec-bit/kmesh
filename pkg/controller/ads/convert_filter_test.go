@@ -24,7 +24,7 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"gotest.tools/assert"
 
-	"kmesh.net/kmesh/api/v2/filter"
+	"lec-bit/kmesh/api/v2/filter"
 )
 
 func TestNewFilterTcpProxy(t *testing.T) {

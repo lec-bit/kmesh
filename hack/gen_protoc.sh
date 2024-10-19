@@ -15,6 +15,6 @@ else
         -v $ROOT_DIR:/kmesh \
         --name kmesh-build \
         --user $(id -u):$(id -g) \
-        ghcr.io/kmesh-net/kmesh-build:latest \
+        ghcr.io/lec-bit/kmesh-build:latest \
         sh -c "cd /kmesh/api && protoc-c --proto_path=$PROTO_PATH --c_out=. $PROTO_SRC"
 fi
