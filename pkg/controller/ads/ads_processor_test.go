@@ -31,13 +31,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	cluster_v2 "kmesh.net/kmesh/api/v2/cluster"
-	core_v2 "kmesh.net/kmesh/api/v2/core"
-	"kmesh.net/kmesh/daemon/options"
-	cache_v2 "kmesh.net/kmesh/pkg/cache/v2"
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/utils/hash"
-	"kmesh.net/kmesh/pkg/utils/test"
+	cluster_v2 "kmesh-net/kmesh/api/v2/cluster"
+	core_v2 "kmesh-net/kmesh/api/v2/core"
+	"kmesh-net/kmesh/daemon/options"
+	cache_v2 "kmesh-net/kmesh/pkg/cache/v2"
+	"kmesh-net/kmesh/pkg/constants"
+	"kmesh-net/kmesh/pkg/utils/hash"
+	"kmesh-net/kmesh/pkg/utils/test"
 )
 
 func TestHandleCdsResponse(t *testing.T) {

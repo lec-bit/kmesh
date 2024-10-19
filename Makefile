@@ -35,10 +35,10 @@ CXX=clang++
 GOFLAGS := $(EXTRA_GOFLAGS)
 EXTLDFLAGS := '-fPIE -pie -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack'
 LDFLAGS := "-X google.golang.org/protobuf/reflect/protoregistry.conflictPolicy=warn \
-			-X kmesh.net/kmesh/pkg/version.gitVersion=$(VERSION) \
-			-X kmesh.net/kmesh/pkg/version.gitCommit=$(GIT_COMMIT_HASH) \
-			-X kmesh.net/kmesh/pkg/version.gitTreeState=$(GIT_TREESTATE) \
-			-X kmesh.net/kmesh/pkg/version.buildDate=$(BUILD_DATE) \
+			-X kmesh-net/kmesh/pkg/version.gitVersion=$(VERSION) \
+			-X kmesh-net/kmesh/pkg/version.gitCommit=$(GIT_COMMIT_HASH) \
+			-X kmesh-net/kmesh/pkg/version.gitTreeState=$(GIT_TREESTATE) \
+			-X kmesh-net/kmesh/pkg/version.buildDate=$(BUILD_DATE) \
 			-linkmode=external -extldflags $(EXTLDFLAGS)"
 
 # target

@@ -27,7 +27,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	core_v2 "kmesh.net/kmesh/api/v2/core"
+	core_v2 "kmesh-net/kmesh/api/v2/core"
 )
 
 func convertToPack(buf []byte) *C.uint8_t {

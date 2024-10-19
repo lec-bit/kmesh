@@ -26,15 +26,15 @@ import (
 	"istio.io/istio/pkg/slices"
 	"k8s.io/apimachinery/pkg/util/rand"
 
-	cluster_v2 "kmesh.net/kmesh/api/v2/cluster"
-	core_v2 "kmesh.net/kmesh/api/v2/core"
-	"kmesh.net/kmesh/api/v2/endpoint"
-	"kmesh.net/kmesh/daemon/options"
-	maps_v2 "kmesh.net/kmesh/pkg/cache/v2/maps"
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/nets"
-	"kmesh.net/kmesh/pkg/utils/hash"
-	"kmesh.net/kmesh/pkg/utils/test"
+	cluster_v2 "kmesh-net/kmesh/api/v2/cluster"
+	core_v2 "kmesh-net/kmesh/api/v2/core"
+	"kmesh-net/kmesh/api/v2/endpoint"
+	"kmesh-net/kmesh/daemon/options"
+	maps_v2 "kmesh-net/kmesh/pkg/cache/v2/maps"
+	"kmesh-net/kmesh/pkg/constants"
+	"kmesh-net/kmesh/pkg/nets"
+	"kmesh-net/kmesh/pkg/utils/hash"
+	"kmesh-net/kmesh/pkg/utils/test"
 )
 
 func TestClusterFlush(t *testing.T) {

@@ -27,14 +27,14 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"kmesh.net/kmesh/daemon/manager/uninstall"
-	"kmesh.net/kmesh/daemon/options"
-	"kmesh.net/kmesh/pkg/bpf"
-	"kmesh.net/kmesh/pkg/bpf/restart"
-	"kmesh.net/kmesh/pkg/cni"
-	"kmesh.net/kmesh/pkg/controller"
-	"kmesh.net/kmesh/pkg/logger"
-	"kmesh.net/kmesh/pkg/status"
+	"kmesh-net/kmesh/daemon/manager/uninstall"
+	"kmesh-net/kmesh/daemon/options"
+	"kmesh-net/kmesh/pkg/bpf"
+	"kmesh-net/kmesh/pkg/bpf/restart"
+	"kmesh-net/kmesh/pkg/cni"
+	"kmesh-net/kmesh/pkg/controller"
+	"kmesh-net/kmesh/pkg/logger"
+	"kmesh-net/kmesh/pkg/status"
 )
 
 const (

@@ -25,7 +25,7 @@ import (
 	"io"
 	"os/exec"
 
-	"kmesh.net/kmesh/pkg/logger"
+	"kmesh-net/kmesh/pkg/logger"
 )
 
 var log = logger.NewLoggerScope("utils")

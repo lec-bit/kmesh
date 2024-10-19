@@ -28,7 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"kmesh.net/kmesh/pkg/constants"
+	"kmesh-net/kmesh/pkg/constants"
 )
 
 func TestShouldEnroll(t *testing.T) {

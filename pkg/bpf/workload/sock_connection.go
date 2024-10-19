@@ -22,16 +22,16 @@ import (
 	"reflect"
 	"syscall"
 
-	"kmesh.net/kmesh/pkg/bpf/restart"
+	"kmesh-net/kmesh/pkg/bpf/restart"
 
 	"github.com/cilium/ebpf"
 	"github.com/cilium/ebpf/link"
 
-	"kmesh.net/kmesh/bpf/kmesh/bpf2go/normal/bpf2go"
-	"kmesh.net/kmesh/daemon/options"
-	"kmesh.net/kmesh/pkg/bpf/utils"
-	"kmesh.net/kmesh/pkg/constants"
-	helper "kmesh.net/kmesh/pkg/utils"
+	"kmesh-net/kmesh/bpf/kmesh/bpf2go/normal/bpf2go"
+	"kmesh-net/kmesh/daemon/options"
+	"kmesh-net/kmesh/pkg/bpf/utils"
+	"kmesh-net/kmesh/pkg/constants"
+	helper "kmesh-net/kmesh/pkg/utils"
 )
 
 type SockConnWorkload struct {

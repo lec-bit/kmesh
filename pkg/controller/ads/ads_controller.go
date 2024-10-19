@@ -24,7 +24,7 @@ import (
 	resource_v3 "github.com/envoyproxy/go-control-plane/pkg/resource/v3"
 	"istio.io/istio/pkg/channels"
 
-	"kmesh.net/kmesh/pkg/logger"
+	"kmesh-net/kmesh/pkg/logger"
 )
 
 var (

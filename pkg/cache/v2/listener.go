@@ -24,10 +24,10 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	core_v2 "kmesh.net/kmesh/api/v2/core"
-	listener_v2 "kmesh.net/kmesh/api/v2/listener"
-	maps_v2 "kmesh.net/kmesh/pkg/cache/v2/maps"
-	"kmesh.net/kmesh/pkg/logger"
+	core_v2 "kmesh-net/kmesh/api/v2/core"
+	listener_v2 "kmesh-net/kmesh/api/v2/listener"
+	maps_v2 "kmesh-net/kmesh/pkg/cache/v2/maps"
+	"kmesh-net/kmesh/pkg/logger"
 )
 
 var RWListener sync.RWMutex

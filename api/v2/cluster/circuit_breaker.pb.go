@@ -9,7 +9,7 @@ package cluster
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	core "kmesh.net/kmesh/api/v2/core"
+	core "kmesh-net/kmesh/api/v2/core"
 	reflect "reflect"
 	sync "sync"
 )

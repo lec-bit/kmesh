@@ -21,8 +21,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"kmesh.net/kmesh/daemon/options"
-	"kmesh.net/kmesh/pkg/cni"
+	"kmesh-net/kmesh/daemon/options"
+	"kmesh-net/kmesh/pkg/cni"
 )
 
 func NewCmd() *cobra.Command {

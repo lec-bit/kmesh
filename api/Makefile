@@ -22,7 +22,7 @@ include ../mk/bpf.vars.mk
 
 C_OUTPUT_DIR := v2-c
 GO_OUTPUT_DIR := v2
-GO_BUILD_DIR := kmesh.net/kmesh/api
+GO_BUILD_DIR := kmesh-net/kmesh/api
 
 PROTO_PATH := ../
 PROTO_SRC := $(call find_source, ../api, *.proto)

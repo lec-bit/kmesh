@@ -21,7 +21,7 @@ import (
 
 	"github.com/cilium/ebpf"
 
-	"kmesh.net/kmesh/pkg/constants"
+	"kmesh-net/kmesh/pkg/constants"
 )
 
 type notifyFunc func(mapOfAuth *ebpf.Map, msgType uint32, key []byte) error

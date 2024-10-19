@@ -25,9 +25,9 @@ import (
 	"istio.io/pkg/env"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"kmesh.net/kmesh/pkg/logger"
-	"kmesh.net/kmesh/pkg/utils"
-	"kmesh.net/kmesh/pkg/version"
+	"kmesh-net/kmesh/pkg/logger"
+	"kmesh-net/kmesh/pkg/utils"
+	"kmesh-net/kmesh/pkg/version"
 )
 
 var hash = fnv.New32a()

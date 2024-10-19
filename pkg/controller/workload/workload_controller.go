@@ -22,11 +22,11 @@ import (
 
 	discoveryv3 "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
 
-	"kmesh.net/kmesh/pkg/auth"
-	"kmesh.net/kmesh/pkg/bpf/restart"
-	bpfwl "kmesh.net/kmesh/pkg/bpf/workload"
-	"kmesh.net/kmesh/pkg/controller/telemetry"
-	"kmesh.net/kmesh/pkg/logger"
+	"kmesh-net/kmesh/pkg/auth"
+	"kmesh-net/kmesh/pkg/bpf/restart"
+	bpfwl "kmesh-net/kmesh/pkg/bpf/workload"
+	"kmesh-net/kmesh/pkg/controller/telemetry"
+	"kmesh-net/kmesh/pkg/logger"
 )
 
 const (

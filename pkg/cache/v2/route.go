@@ -21,9 +21,9 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	core_v2 "kmesh.net/kmesh/api/v2/core"
-	route_v2 "kmesh.net/kmesh/api/v2/route"
-	maps_v2 "kmesh.net/kmesh/pkg/cache/v2/maps"
+	core_v2 "kmesh-net/kmesh/api/v2/core"
+	route_v2 "kmesh-net/kmesh/api/v2/route"
+	maps_v2 "kmesh-net/kmesh/pkg/cache/v2/maps"
 )
 
 type RouteConfigCache struct {

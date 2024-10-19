@@ -31,7 +31,7 @@ import (
 	nodeagentutil "istio.io/istio/security/pkg/nodeagent/util"
 	pkiutil "istio.io/istio/security/pkg/pki/util"
 
-	"kmesh.net/kmesh/pkg/nets"
+	"kmesh-net/kmesh/pkg/nets"
 )
 
 type caClient struct {

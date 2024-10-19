@@ -31,7 +31,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"istio.io/istio/pkg/channels"
 
-	"kmesh.net/kmesh/pkg/controller/xdstest"
+	"kmesh-net/kmesh/pkg/controller/xdstest"
 )
 
 func TestAdsStreamAdsStreamCreateAndSend(t *testing.T) {

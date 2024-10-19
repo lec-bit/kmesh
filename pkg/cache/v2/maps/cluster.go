@@ -27,7 +27,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	cluster_v2 "kmesh.net/kmesh/api/v2/cluster"
+	cluster_v2 "kmesh-net/kmesh/api/v2/cluster"
 )
 
 func clusterToGolang(goMsg *cluster_v2.Cluster, cMsg *C.Cluster__Cluster) error {

@@ -35,8 +35,8 @@ import (
 	"istio.io/istio/pkg/slices"
 	"istio.io/istio/pkg/test/util/retry"
 
-	core_v2 "kmesh.net/kmesh/api/v2/core"
-	"kmesh.net/kmesh/pkg/controller/ads"
+	core_v2 "kmesh-net/kmesh/api/v2/core"
+	"kmesh-net/kmesh/pkg/controller/ads"
 )
 
 type fakeDNSServer struct {

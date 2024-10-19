@@ -27,9 +27,9 @@ import (
 
 	"github.com/cilium/ebpf"
 
-	"kmesh.net/kmesh/daemon/options"
-	"kmesh.net/kmesh/pkg/bpf/restart"
-	"kmesh.net/kmesh/pkg/logger"
+	"kmesh-net/kmesh/daemon/options"
+	"kmesh-net/kmesh/pkg/bpf/restart"
+	"kmesh-net/kmesh/pkg/logger"
 )
 
 var log = logger.NewLoggerScope("bpf_workload")

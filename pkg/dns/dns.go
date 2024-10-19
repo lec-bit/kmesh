@@ -33,9 +33,9 @@ import (
 	"github.com/miekg/dns"
 	"k8s.io/client-go/util/workqueue"
 
-	core_v2 "kmesh.net/kmesh/api/v2/core"
-	"kmesh.net/kmesh/pkg/controller/ads"
-	"kmesh.net/kmesh/pkg/logger"
+	core_v2 "kmesh-net/kmesh/api/v2/core"
+	"kmesh-net/kmesh/pkg/controller/ads"
+	"kmesh-net/kmesh/pkg/logger"
 )
 
 var (

@@ -32,8 +32,8 @@ import (
 	_ "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
 
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/logger"
+	"kmesh-net/kmesh/pkg/constants"
+	"kmesh-net/kmesh/pkg/logger"
 )
 
 const (

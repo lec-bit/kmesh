@@ -20,8 +20,8 @@ package main
 import (
 	"os"
 
-	"kmesh.net/kmesh/daemon/manager"
-	"kmesh.net/kmesh/pkg/logger"
+	"kmesh-net/kmesh/daemon/manager"
+	"kmesh-net/kmesh/pkg/logger"
 )
 
 func main() {

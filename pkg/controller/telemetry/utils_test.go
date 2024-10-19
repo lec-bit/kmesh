@@ -22,7 +22,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"kmesh.net/kmesh/api/v2/workloadapi"
+	"kmesh-net/kmesh/api/v2/workloadapi"
 )
 
 func TestRegisterMetrics(t *testing.T) {

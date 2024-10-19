@@ -25,14 +25,14 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"istio.io/istio/pkg/slices"
 
-	core_v2 "kmesh.net/kmesh/api/v2/core"
-	route_v2 "kmesh.net/kmesh/api/v2/route"
-	"kmesh.net/kmesh/daemon/options"
-	bpfads "kmesh.net/kmesh/pkg/bpf/ads"
-	maps_v2 "kmesh.net/kmesh/pkg/cache/v2/maps"
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/utils/hash"
-	"kmesh.net/kmesh/pkg/utils/test"
+	core_v2 "kmesh-net/kmesh/api/v2/core"
+	route_v2 "kmesh-net/kmesh/api/v2/route"
+	"kmesh-net/kmesh/daemon/options"
+	bpfads "kmesh-net/kmesh/pkg/bpf/ads"
+	maps_v2 "kmesh-net/kmesh/pkg/cache/v2/maps"
+	"kmesh-net/kmesh/pkg/constants"
+	"kmesh-net/kmesh/pkg/utils/hash"
+	"kmesh-net/kmesh/pkg/utils/test"
 )
 
 func TestRouteConfigLookupAll(t *testing.T) {

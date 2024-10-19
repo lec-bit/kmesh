@@ -19,10 +19,10 @@ package auth
 import (
 	"testing"
 
-	"kmesh.net/kmesh/api/v2/workloadapi/security"
-	"kmesh.net/kmesh/daemon/options"
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/utils/test"
+	"kmesh-net/kmesh/api/v2/workloadapi/security"
+	"kmesh-net/kmesh/daemon/options"
+	"kmesh-net/kmesh/pkg/constants"
+	"kmesh-net/kmesh/pkg/utils/test"
 )
 
 func Test_policyStore_updatePolicy(t *testing.T) {

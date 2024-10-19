@@ -24,9 +24,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"kmesh.net/kmesh/ctl/utils"
-	"kmesh.net/kmesh/pkg/logger"
-	"kmesh.net/kmesh/pkg/version"
+	"kmesh-net/kmesh/ctl/utils"
+	"kmesh-net/kmesh/pkg/logger"
+	"kmesh-net/kmesh/pkg/version"
 )
 
 var log = logger.NewLoggerScope("kmeshctl/version")

@@ -22,7 +22,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"kmesh.net/kmesh/pkg/constants"
+	"kmesh-net/kmesh/pkg/constants"
 )
 
 type BpfConfig struct {

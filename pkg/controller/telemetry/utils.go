@@ -25,8 +25,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"kmesh.net/kmesh/api/v2/workloadapi"
-	"kmesh.net/kmesh/pkg/logger"
+	"kmesh-net/kmesh/api/v2/workloadapi"
+	"kmesh-net/kmesh/pkg/logger"
 )
 
 var (

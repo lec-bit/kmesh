@@ -29,17 +29,17 @@ import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	adminv2 "kmesh.net/kmesh/api/v2/admin"
-	"kmesh.net/kmesh/api/v2/workloadapi/security"
-	"kmesh.net/kmesh/daemon/options"
-	bpfads "kmesh.net/kmesh/pkg/bpf/ads"
-	maps_v2 "kmesh.net/kmesh/pkg/cache/v2/maps"
-	"kmesh.net/kmesh/pkg/constants"
-	"kmesh.net/kmesh/pkg/controller"
-	"kmesh.net/kmesh/pkg/controller/ads"
-	"kmesh.net/kmesh/pkg/controller/workload/bpfcache"
-	"kmesh.net/kmesh/pkg/logger"
-	"kmesh.net/kmesh/pkg/version"
+	adminv2 "kmesh-net/kmesh/api/v2/admin"
+	"kmesh-net/kmesh/api/v2/workloadapi/security"
+	"kmesh-net/kmesh/daemon/options"
+	bpfads "kmesh-net/kmesh/pkg/bpf/ads"
+	maps_v2 "kmesh-net/kmesh/pkg/cache/v2/maps"
+	"kmesh-net/kmesh/pkg/constants"
+	"kmesh-net/kmesh/pkg/controller"
+	"kmesh-net/kmesh/pkg/controller/ads"
+	"kmesh-net/kmesh/pkg/controller/workload/bpfcache"
+	"kmesh-net/kmesh/pkg/logger"
+	"kmesh-net/kmesh/pkg/version"
 )
 
 var log = logger.NewLoggerScope("status")

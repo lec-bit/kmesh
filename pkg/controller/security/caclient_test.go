@@ -38,7 +38,7 @@ import (
 	"istio.io/istio/pkg/spiffe"
 	"istio.io/istio/security/pkg/credentialfetcher/plugin"
 
-	"kmesh.net/kmesh/pkg/nets"
+	"kmesh-net/kmesh/pkg/nets"
 )
 
 const (

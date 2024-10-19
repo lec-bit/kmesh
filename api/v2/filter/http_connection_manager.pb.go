@@ -9,7 +9,7 @@ package filter
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	route "kmesh.net/kmesh/api/v2/route"
+	route "kmesh-net/kmesh/api/v2/route"
 	reflect "reflect"
 	sync "sync"
 )

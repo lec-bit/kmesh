@@ -25,8 +25,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 
-	"kmesh.net/kmesh/api/v2/workloadapi"
-	"kmesh.net/kmesh/pkg/controller/workload/cache"
+	"kmesh-net/kmesh/api/v2/workloadapi"
+	"kmesh-net/kmesh/pkg/controller/workload/cache"
 )
 
 func TestCommonTrafficLabels2map(t *testing.T) {
