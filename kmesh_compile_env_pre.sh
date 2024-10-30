@@ -12,6 +12,7 @@ function install_libboundscheck() {
 }
 
 function dependency_pkg_install() {
+    echo "depdependency_pkg_install"
     if command -v apt > /dev/null; then
 	    # apt install 
 	    apt-get update && apt-get install -y git make clang libbpf-dev llvm linux-tools-generic protobuf-compiler libprotobuf-dev libprotobuf-c-dev protobuf-c-compiler cmake pkg-config
@@ -51,10 +52,6 @@ function adapt_include_env {
         sed -i '/bpf_mem_ptr/{N;N;N;N;d;}' bpf/kmesh/ads/include/kmesh_common.h
     fi
 }
-
-if [ "${SKIP_DEPENDENCY_INSTALL}" != "true" ]; then
-	dependency_pkg_install
-fi
 
 function kmesh_set_env(){
     if [ "$(arch)" == "x86_64" ]; then
@@ -102,6 +99,9 @@ function set_enhanced_kernel_env() {
 }
 
 function prepare() {
+    if [ "${SKIP_DEPENDENCY_INSTALL}" != "true" ]; then
+        dependency_pkg_install
+    fi
     fix_libbpf_bug
     adapt_low_version_kernel
     adapt_include_env
