@@ -115,6 +115,10 @@ kmeshctl:
 gen-proto:
 	$(QUIET) make -C api gen-proto
 
+.PHONY: gen-bpf2go
+gen-bpf2go:
+	$(QUIET) $(GO) generate bpf/kmesh/bpf2go/bpf2go.go
+
 .PHONY: tidy
 tidy:
 	go mod tidy
@@ -122,6 +126,7 @@ tidy:
 .PHONY: gen
 gen: tidy\
 	gen-proto \
+	gen-bpf2go \
 	format
 
 .PHONY: gen-check
