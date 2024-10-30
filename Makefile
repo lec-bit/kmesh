@@ -117,7 +117,8 @@ gen-proto:
 
 .PHONY: gen-bpf2go
 gen-bpf2go:
-	$(QUIET) $(GO) generate bpf/kmesh/bpf2go/bpf2go.go
+	@bash -c 'source ./kmesh_compile_env_pre.sh; set_enhanced_kernel_env; prepare' 
+	$(GO) generate bpf/kmesh/bpf2go/bpf2go.go
 
 .PHONY: tidy
 tidy:
