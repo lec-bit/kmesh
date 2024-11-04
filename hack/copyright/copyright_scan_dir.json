@@ -9,7 +9,6 @@
   "c_dirs": [
     "/bpf",
     "/config",
-    "/depends",
     "/kernel",
     "/oncn-mda"
   ],

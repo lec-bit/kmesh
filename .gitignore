@@ -45,8 +45,6 @@ bpf/kmesh/bpf2go/**
 config/**
 mk/*
 
-bpf/include/bpf_helper_defs_ext.h
-
 kernel/**/*.ko
 kernel/**/*.cmd
 kernel/ko_src/kmesh/Module.symvers
