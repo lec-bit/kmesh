@@ -81,13 +81,13 @@ issues:
     - ".*\\.pb\\.go"
     - ".*\\.gen\\.go"
     - ".*_bpfeb\\.go"
-    - ".*_bpfel\\.go"
+    - ".*_bpfel\\.go$"
     - ".*bpfeb\\.go"
-    - ".*bpfel\\.go"
-    - "kmeshsockops_bpfel.go"
+    - ".*bpfel\\.go$"
+    - bpf/kmesh/bpf2go/kernelnative/enhanced/kmeshsockops_bpfel.go
   exclude-dirs:
-    - "bpf/kmesh/bpf2go/dualengine"
-    - "bpf/kmesh/bpf2go/kernelnative"
+    - bpf/kmesh/bpf2go/dualengine
+    - bpf/kmesh/bpf2go/kernelnative
   exclude-rules:
     # Exclude some linters from running on test files.
     - path: _test\.go$|^tests/|^samples/
