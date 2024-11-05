@@ -85,6 +85,9 @@ issues:
     - ".*bpfeb\\.go"
     - ".*bpfel\\.go"
     - "kmeshsockops_bpfel.go"
+  exclude-dirs:
+    - "bpf/kmesh/bpf2go/dualengine"
+    - "bpf/kmesh/bpf2go/kernelnative"
   exclude-rules:
     # Exclude some linters from running on test files.
     - path: _test\.go$|^tests/|^samples/
