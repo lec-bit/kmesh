@@ -81,14 +81,6 @@ issues:
     - ".*_bpfeb\\.go"
     - ".*_bpfel\\.go$"
     - ".*bpfeb\\.go"
-    - ".*bpfel\\.go$"
-    - ".*/bpf/kmesh/bpf2go/kernelnative/enhanced/kmeshsockops_bpfel\\.go"
-    - "bpf/kmesh/bpf2go/kernelnative/enhanced/kmeshsockops_bpfel\\.go"
-    - ".*kmeshsockops_bpfel\\.go"
-    - bpf/kmesh/bpf2go/kernelnative/enhanced/kmeshsockops_bpfel.go
-  exclude-dirs:
-    - bpf/kmesh/bpf2go/dualengine
-    - bpf/kmesh/bpf2go/kernelnative/enhanced
   exclude-rules:
     # Exclude some linters from running on test files.
     - path: _test\.go$|^tests/|^samples/
@@ -98,9 +90,6 @@ issues:
     - path: _test\.go$
       text: "dot-imports: should not use dot imports"
     # We need to use the deprecated module since the jsonpb replacement is not backwards compatible.
-    - path: kmeshsockops_bpfel\.go$
-      linters:
-        - errcheck
     - linters:
         - staticcheck
       text: "SA1019: package github.com/golang/protobuf/jsonpb"
