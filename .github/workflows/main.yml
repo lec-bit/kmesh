@@ -49,9 +49,8 @@ jobs:
     - name: golangci-lint
       uses: golangci/golangci-lint-action@v3.7.0
       with:
-        args: "--config=.golangci.yaml --out-format colored-line-number --verbose"
+        args: "--config=common/config/.golangci.yaml --out-format colored-line-number --verbose"
         skip-pkg-cache: true
-      working-directory: .
 
     - name: Go Test
       run: |
