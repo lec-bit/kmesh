@@ -78,9 +78,16 @@ issues:
   # "/" will be replaced by current OS file path separator to properly work on Windows.
   # Default: []
   exclude-files:
+    - ".*\\.pb\\.go"
+    - ".*\\.gen\\.go"
     - ".*_bpfeb\\.go"
     - ".*_bpfel\\.go$"
     - ".*bpfeb\\.go"
+    - ".*bpfel\\.go$"
+    - ".*/bpf/kmesh/bpf2go/kernelnative/enhanced/kmeshsockops_bpfel.go"
+  exclude-dirs:
+    - bpf/kmesh/bpf2go/dualengine
+    - bpf/kmesh/bpf2go/kernelnative
   exclude-rules:
     # Exclude some linters from running on test files.
     - path: _test\.go$|^tests/|^samples/
