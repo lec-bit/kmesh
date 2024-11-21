@@ -20,7 +20,10 @@ import (
 	"os"
 	"strconv"
 
+	"fmt"
+
 	"github.com/cilium/ebpf"
+	"github.com/cilium/ebpf/link"
 )
 
 func SetEnvByBpfMapId(m *ebpf.Map, key string) error {
@@ -28,4 +31,28 @@ func SetEnvByBpfMapId(m *ebpf.Map, key string) error {
 	id, _ := info.ID()
 	stringId := strconv.Itoa(int(id))
 	return os.Setenv(key, stringId)
+}
+
+func BpfProgUpdate(pinPath string, cgopt link.CgroupOptions) (link.Link, error) {
+	sclink, err := link.LoadPinnedLink(pinPath, &ebpf.LoadPinOptions{})
+	if err != nil {
+		return nil, err
+	}
+	if err := sclink.Update(cgopt.Program); err != nil {
+		return nil, fmt.Errorf("updating link %s failed: %w", pinPath, err)
+	}
+	return sclink, nil
+}
+
+func BpfMapDeleteByPinPath(bpfFsPath string) error {
+	progMap, err := ebpf.LoadPinnedMap(bpfFsPath, nil)
+	if err != nil {
+		return fmt.Errorf("loadPinnedMap failed for %s: %v, when kmesh delete by pin path", bpfFsPath, err)
+	}
+	defer progMap.Close()
+	if err := progMap.Unpin(); err != nil {
+		return fmt.Errorf("unpin failed for %s: %v", bpfFsPath, err)
+	}
+
+	return nil
 }

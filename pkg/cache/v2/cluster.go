@@ -232,3 +232,7 @@ func (cache *ClusterCache) Dump() []*cluster_v2.Cluster {
 	}
 	return clusters
 }
+
+func (cache *ClusterCache) GetClusterHashPtr() *map[string][2]uint64 {
+	return &cache.resourceHash
+}
