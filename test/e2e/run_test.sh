@@ -244,6 +244,9 @@ while (( "$#" )); do
       IPV6=true
       shift
     ;;
+    --kernel-native)
+      shift
+    ;;
     --cleanup)
       CLEANUP_KIND=true
       CLEANUP_REGISTRY=true
@@ -285,7 +288,7 @@ if [[ -z "${SKIP_SETUP:-}" ]]; then
     setup_kmesh
 fi
 
-cmd="go test -v -tags=integ $ROOT_DIR/test/e2e/... -istio.test.kube.loadbalancer=false ${PARAMS[*]}"
+cmd="go test -v -tags=integ $ROOT_DIR/test/e2e/kernel-native/... -istio.test.kube.loadbalancer=false ${PARAMS[*]}"
 
 bash -c "$cmd"
 
