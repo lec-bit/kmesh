@@ -9,6 +9,7 @@
 #include "listener.h"
 #include "listener/listener.pb-c.h"
 #include "filter.h"
+#include "route_config.h"
 #include "cluster.h"
 #include "bpf_common.h"
 
@@ -27,31 +28,46 @@ static inline int sock4_traffic_control(struct bpf_sock_addr *ctx)
         return 0;
 
     DECLARE_VAR_ADDRESS(ctx, address);
-
+    bpf_printk("address:%u    %d\n", (ctx)->user_ip4, (ctx)->user_port);
     listener = map_lookup_listener(&address);
     if (listener == NULL) {
         address.ipv4 = 0;
         listener = map_lookup_listener(&address);
-        if (!listener)
+        if (!listener) {
+            bpf_printk("listener failed");
             return -ENOENT;
+        }
     }
     DECLARE_VAR_IPV4(ctx->user_ip4, ip);
-    BPF_LOG(DEBUG, KMESH, "bpf find listener addr=[%s:%u]\n", ip2str(&ip, 1), bpf_ntohs(ctx->user_port));
+    BPF_LOG(INFO, KMESH, "bpf find listener addr=[%s:%u]\n", ip2str(&ip, 1), bpf_ntohs(ctx->user_port));
 
-#if ENHANCED_KERNEL
-    // todo build when kernel support http parse and route
-    // defer conn
-    ret = bpf_setsockopt(ctx, IPPROTO_TCP, TCP_ULP, (void *)kmesh_module_name, sizeof(kmesh_module_name));
-    if (ret)
-        BPF_LOG(ERR, KMESH, "bpf set sockopt failed! ret:%d\n", ret);
-#else  // KMESH_ENABLE_HTTP
-    ret = listener_manager(ctx, listener, NULL);
-    if (ret != 0) {
-        BPF_LOG(ERR, KMESH, "listener_manager failed, ret %d\n", ret);
-        return ret;
+// #if ENHANCED_KERNEL
+    if (ctx->hdrmsg) {
+        // bpf_printk("hdrmsg:%u\n", ctx->hdrmsg->size);
+        bpf_printk("hdrmsg:%s\n", ctx->hdrmsg->ptr);
+        bpf_printk("hdrmsg:%p\n", ctx->hdrmsg);
+        ret = listener_manager(ctx, listener, ctx->hdrmsg);
+        if (ret != 0) {
+            BPF_LOG(ERR, KMESH, "listener_manager L7 failed, ret %d\n", ret);
+            return ret;
+        }
+    } else {
+        // todo build when kernel support http parse and route
+        // defer conn
+        ret = bpf_setsockopt(ctx, IPPROTO_TCP, TCP_ULP, (void *)kmesh_module_name, sizeof(kmesh_module_name));
+        if (ret)
+            BPF_LOG(ERR, KMESH, "bpf set sockopt failed! ret:%d\n", ret);
+        else 
+            bpf_printk("bpf_setsockopt success");
     }
-#endif // KMESH_ENABLE_HTTP
 
+// #else  // KMESH_ENABLE_HTTP
+    // ret = listener_manager(ctx, listener, NULL);
+    // if (ret != 0) {
+    //     BPF_LOG(ERR, KMESH, "listener_manager failed, ret %d\n", ret);
+    //     return ret;
+    // }
+// #endif // KMESH_ENABLE_HTTP
     return 0;
 }
 
@@ -64,6 +80,11 @@ int cgroup_connect4_prog(struct bpf_sock_addr *ctx)
     kmesh_ctx.dnat_ip.ip4 = ctx->user_ip4;
     kmesh_ctx.dnat_port = ctx->user_port;
 
+    if (ctx->hdrmsg) {
+        // bpf_printk("hdrmsg:%u\n", ctx->hdrmsg->size);
+        bpf_printk("hdrmsg:%s\n", ctx->hdrmsg->ptr);
+    }
+    
     if (handle_kmesh_manage_process(&kmesh_ctx) || !is_kmesh_enabled(ctx)) {
         return CGROUP_SOCK_OK;
     }

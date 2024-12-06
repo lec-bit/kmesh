@@ -106,11 +106,11 @@ static inline int on_cluster_sock_bind(ctx_buff_t *ctx, const Cluster__Cluster *
         BPF_LOG(WARN, CIRCUIT_BREAKER, "provided sock is NULL\n");
         return 0;
     }
-    data = bpf_sk_storage_get(&map_of_cluster_sock, ctx->sk, 0, BPF_LOCAL_STORAGE_GET_F_CREATE);
-    if (!data) {
-        BPF_LOG(ERR, CIRCUIT_BREAKER, "on_cluster_sock_bind call bpf_sk_storage_get failed\n");
-        return 0;
-    }
+//    data = bpf_sk_storage_get(&map_of_cluster_sock, ctx->sk, 0, BPF_LOCAL_STORAGE_GET_F_CREATE);
+//    if (!data) {
+//        BPF_LOG(ERR, CIRCUIT_BREAKER, "on_cluster_sock_bind call bpf_sk_storage_get failed\n");
+//        return 0;
+//    }
     data->cluster_id = cluster_id;
     return 0;
 }

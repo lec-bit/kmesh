@@ -318,6 +318,8 @@ static inline int cluster_handle_loadbalance(Cluster__Cluster *cluster, address_
         name,
         ip2str(&sock_addr->ipv4, 1),
         bpf_ntohs(sock_addr->port));
+    //bpf_printk("(ctx)->user_ip4:%u  (ctx)->user_port%u \n", (ctx)->user_ip4, (ctx)->user_port);
+    bpf_printk("sock_addr->user_ip4:%u  sock_addr->user_port%u \n", sock_addr->ipv4, sock_addr->port);
     SET_CTX_ADDRESS(ctx, sock_addr);
     return 0;
 }
@@ -331,7 +333,7 @@ int cluster_manager(ctx_buff_t *ctx)
     Cluster__Cluster *cluster = NULL;
 
     DECLARE_VAR_ADDRESS(ctx, addr);
-
+    bpf_printk("cluster_manager");
     KMESH_TAIL_CALL_CTX_KEY(ctx_key, KMESH_TAIL_CALL_CLUSTER, addr);
     ctx_val = kmesh_tail_lookup_ctx(&ctx_key);
     if (ctx_val == NULL)
@@ -342,12 +344,12 @@ int cluster_manager(ctx_buff_t *ctx)
     if (cluster == NULL)
         return KMESH_TAIL_CALL_RET(ENOENT);
 
-    ret = on_cluster_sock_bind(ctx, cluster);
-    if (ret) {
-        // open circuit breaker, should reject here.
-        MARK_REJECTED(ctx);
-        return KMESH_TAIL_CALL_RET(ret);
-    }
+//    ret = on_cluster_sock_bind(ctx, cluster);
+//    if (ret) {
+//        // open circuit breaker, should reject here.
+//        MARK_REJECTED(ctx);
+//        return KMESH_TAIL_CALL_RET(ret);
+//    }
     ret = cluster_handle_loadbalance(cluster, &addr, ctx);
     return KMESH_TAIL_CALL_RET(ret);
 }

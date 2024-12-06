@@ -27,13 +27,13 @@ typedef struct bpf_sock_ops ctx_buff_t;
     (ctx)->remote_port = 0
 #else
 #define SET_CTX_ADDRESS(ctx, address)                                                                                  \
-    (ctx)->replylong[2] = (address)->ipv4;                                                                             \
-    (ctx)->replylong[3] = (address)->port
+    // (ctx)->replylong[2] = (address)->ipv4;                                                                             \
+    // (ctx)->replylong[3] = (address)->port
 
 #define MARK_REJECTED(ctx)                                                                                             \
     BPF_LOG(DEBUG, KMESH, "mark reject\n");                                                                            \
-    (ctx)->replylong[2] = 0;                                                                                           \
-    (ctx)->replylong[3] = 0
+    // (ctx)->replylong[2] = 0;                                                                                           \
+    // (ctx)->replylong[3] = 0
 #endif
 
 #endif //__BPF_CTX_SOCK_OPS_H

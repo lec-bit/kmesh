@@ -227,6 +227,7 @@ virtual_host_route_match_check(Route__Route *route, address_t *addr, ctx_buff_t 
     if (!ptr)
         return 0;
 
+    bpf_printk("virtual_host_route_match:%s\n", ptr);
     if (!route->match)
         return 0;
 
@@ -238,6 +239,7 @@ virtual_host_route_match_check(Route__Route *route, address_t *addr, ctx_buff_t 
     if (!prefix)
         return 0;
 
+    bpf_printk("virtual_host_route_match prefix:%s\n", prefix);
     if (bpf_strnstr(ptr, prefix, BPF_DATA_MAX_LEN) == NULL)
         return 0;
 

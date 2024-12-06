@@ -26,12 +26,16 @@ static int defer_connect(struct sock *sk, struct msghdr *msg, size_t size)
     struct bpf_mem_ptr tmpMem = {0};
     void *kbuf = NULL;
     size_t kbuf_size;
-    struct sockaddr_in addr_in;
+    // struct sockaddr_in addr_in;
     long timeo = 1;
     const struct iovec *iov;
-    struct bpf_sock_ops_kern sock_ops;
+    // struct bpf_sock_ops_kern sock_ops;
+    struct bpf_sock_addr_kern sock_addr;
+    struct sockaddr_in uaddr;
     void __user *ubase;
     int err;
+    int ctx_len = 1;
+    int ctx_type = 1;
     u32 dport, daddr;
     dport = sk->sk_dport;
     daddr = sk->sk_daddr;
@@ -83,27 +87,32 @@ static int defer_connect(struct sock *sk, struct msghdr *msg, size_t size)
         goto out;
     }
 #else
-    memset(&sock_ops, 0, offsetof(struct bpf_sock_ops_kern, temp));
-    if (sk_fullsock(sk)) {
-        sock_ops.is_fullsock = 1;
-        sock_owned_by_me(sk);
-    }
-    sock_ops.sk = sk;
-    sock_ops.op = BPF_SOCK_OPS_TCP_DEFER_CONNECT_CB;
-    sock_ops.args[0] = ((u64)(&tmpMem) & U32_MAX);
-    sock_ops.args[1] = (((u64)(&tmpMem) >> 32) & U32_MAX);
+    // memset(&sock_ops, 0, offsetof(struct bpf_sock_ops_kern, temp));
+    // if (sk_fullsock(sk)) {
+    //     sock_ops.is_fullsock = 1;
+    //     sock_owned_by_me(sk);
+    // }
+    // sock_ops.sk = sk;
+    // sock_ops.op = BPF_SOCK_OPS_TCP_DEFER_CONNECT_CB;
+    // sock_ops.args[0] = ((u64)(&tmpMem) & U32_MAX);
+    // sock_ops.args[1] = (((u64)(&tmpMem) >> 32) & U32_MAX);
 
-    (void)BPF_CGROUP_RUN_PROG_SOCK_OPS(&sock_ops);
-    if (sock_ops.replylong[2] && sock_ops.replylong[3]) {
-        daddr = sock_ops.replylong[2];
-        dport = sock_ops.replylong[3];
-    }
+    // (void)BPF_CGROUP_RUN_PROG_SOCK_OPS(&sock_ops);
+    // if (sock_ops.replylong[2] && sock_ops.replylong[3]) {
+    //     daddr = sock_ops.replylong[2];
+    //     dport = sock_ops.replylong[3];
+    // }
+    uaddr.sin_family = AF_INET;
+    uaddr.sin_addr.s_addr = daddr;
+    uaddr.sin_port = dport;
+    err = BPF_CGROUP_RUN_PROG_INET4_CONNECT_NEW(sk, (struct sockaddr *)&uaddr, ctx_len, ctx_type, &tmpMem);
+    printk(KERN_INFO "kmesh cgroup err:%d\n", err);
 #endif
 connect:
-    addr_in.sin_family = AF_INET;
-    addr_in.sin_addr.s_addr = daddr;
-    addr_in.sin_port = dport;
-    err = sk->sk_prot->connect(sk, (struct sockaddr *)&addr_in, sizeof(struct sockaddr_in));
+    // addr_in.sin_family = AF_INET;
+    // addr_in.sin_addr.s_addr = daddr;
+    // addr_in.sin_port = dport;
+    err = sk->sk_prot->connect(sk, (struct sockaddr *)&uaddr, sizeof(struct sockaddr_in));
     inet_sk(sk)->bpf_defer_connect = 0;
     if (unlikely(err)) {
         tcp_set_state(sk, TCP_CLOSE);

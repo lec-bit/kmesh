@@ -88,7 +88,7 @@ static inline int handle_http_connection_manager(
     char *route_name = NULL;
     ctx_key_t ctx_key = {0};
     ctx_val_t ctx_val = {0};
-
+    bpf_printk("handle_http_connection_manager");
     route_name = KMESH_GET_PTR_VAL((http_conn->route_config_name), char *);
     if (!route_name) {
         BPF_LOG(ERR, FILTER, "failed to get http conn route name\n");
@@ -128,7 +128,7 @@ int filter_manager(ctx_buff_t *ctx)
     kmesh_tail_delete_ctx(&ctx_key);
 
     switch (filter->config_type_case) {
-#ifndef CGROUP_SOCK_MANAGE
+// #ifndef CGROUP_SOCK_MANAGE
     case LISTENER__FILTER__CONFIG_TYPE_HTTP_CONNECTION_MANAGER:
         http_conn = KMESH_GET_PTR_VAL(filter->http_connection_manager, Filter__HttpConnectionManager);
         ret = bpf_parse_header_msg(ctx_val->msg);
@@ -144,7 +144,7 @@ int filter_manager(ctx_buff_t *ctx)
         }
         ret = handle_http_connection_manager(http_conn, &addr, ctx, ctx_val->msg);
         break;
-#endif
+// #endif
     case LISTENER__FILTER__CONFIG_TYPE_TCP_PROXY:
         tcp_proxy = KMESH_GET_PTR_VAL(filter->tcp_proxy, Filter__TcpProxy);
         if (!tcp_proxy) {

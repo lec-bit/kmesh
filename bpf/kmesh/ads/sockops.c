@@ -53,10 +53,10 @@ int sockops_prog(struct bpf_sock_ops *skops)
         return BPF_OK;
 
     switch (skops->op) {
-    case BPF_SOCK_OPS_TCP_DEFER_CONNECT_CB:
-        msg = (struct bpf_mem_ptr *)BPF_CONSTRUCT_PTR(skops->args[0], skops->args[1]);
-        (void)sockops_traffic_control(skops, msg);
-        break;
+    // case BPF_SOCK_OPS_TCP_DEFER_CONNECT_CB:
+    //     msg = (struct bpf_mem_ptr *)BPF_CONSTRUCT_PTR(skops->args[0], skops->args[1]);
+    //     (void)sockops_traffic_control(skops, msg);
+    //     break;
     case BPF_SOCK_OPS_ACTIVE_ESTABLISHED_CB:
         if (bpf_sock_ops_cb_flags_set(skops, BPF_SOCK_OPS_STATE_CB_FLAG) != 0) {
             BPF_LOG(ERR, SOCKOPS, "set sockops cb failed!\n");
