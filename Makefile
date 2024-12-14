@@ -73,8 +73,10 @@ TMP_FILES := bpf/kmesh/bpf2go/bpf2go.go \
 	bpf/include/bpf_helper_defs_ext.h \
 	depends/include/bpf_helper_defs_ext.h
 
-.PHONY: all
-all:
+.PHONY: all data controller
+all: data controller
+
+data:
 	$(QUIET) find $(ROOT_DIR)/mk -name "*.pc" | xargs sed -i "s#^prefix=.*#prefix=${ROOT_DIR}#g"
 
 	$(QUIET) make -C api/v2-c
@@ -82,12 +84,14 @@ all:
 	
 	$(QUIET) $(GO) generate bpf/kmesh/bpf2go/bpf2go.go
 	
+	$(call printlog, BUILD, "kernel")
+	$(QUIET) make -C kernel/ko_src	
+	
+controller:
+	$(QUIET) find $(ROOT_DIR)/mk -name "*.pc" | xargs sed -i "s#^prefix=.*#prefix=${ROOT_DIR}#g"
 	$(call printlog, BUILD, $(APPS1))
 	$(QUIET) (export PKG_CONFIG_PATH=$(PKG_CONFIG_PATH):$(ROOT_DIR)mk; \
 		$(GO) build -ldflags $(LDFLAGS) -tags $(ENHANCED_KERNEL) -o $(APPS1) $(GOFLAGS) ./daemon/main.go)
-	
-	$(call printlog, BUILD, "kernel")
-	$(QUIET) make -C kernel/ko_src
 
 	$(call printlog, BUILD, $(APPS2))
 	$(QUIET) cd oncn-mda && cmake . -B build && make -C build
@@ -120,6 +124,10 @@ gen: tidy\
 	gen-proto \
 	format
 
+.PHONY: kmesh-controller
+kmesh-controller:
+	hack/controller.sh
+	
 .PHONY: gen-check
 gen-check: gen
 	hack/gen-check.sh
