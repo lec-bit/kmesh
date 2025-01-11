@@ -12,6 +12,12 @@
 #include <linux/list.h>
 #include <linux/bpf.h>
 #include <linux/percpu.h>
+#include <linux/filter.h>
+
+struct bpf_mem_ptr {
+    void *ptr;
+    __u32 size;
+};
 
 enum kmesh_l7_proto_type { PROTO_UNKNOW = 0, PROTO_HTTP_1_1, PROTO_HTTP_2_0 };
 
@@ -33,7 +39,7 @@ struct kmesh_data_node {
 
 struct msg_protocol {
     struct list_head list;
-    u32 (*parse_protocol_msg)(const struct bpf_mem_ptr *msg);
+    u32 (*parse_protocol_msg)(const struct bpf_sock_addr_kern *msg);
 };
 
 extern struct rb_root *g_kmesh_data_root;

@@ -34,7 +34,6 @@ struct bpf_mem_ptr {
     __u32 size;
 };
 
-#if !ENHANCED_KERNEL
 static inline int bpf__strncmp(const char *dst, int n, const char *src)
 {
     if (dst == NULL || src == NULL)
@@ -69,7 +68,6 @@ static inline char *bpf_strncpy(char *dst, int n, const char *src)
     }
     return dst;
 }
-#endif
 
 typedef Core__SocketAddress address_t;
 

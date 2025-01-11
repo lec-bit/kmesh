@@ -331,7 +331,6 @@ int cluster_manager(ctx_buff_t *ctx)
     Cluster__Cluster *cluster = NULL;
 
     DECLARE_VAR_ADDRESS(ctx, addr);
-
     KMESH_TAIL_CALL_CTX_KEY(ctx_key, KMESH_TAIL_CALL_CLUSTER, addr);
     ctx_val = kmesh_tail_lookup_ctx(&ctx_key);
     if (ctx_val == NULL)

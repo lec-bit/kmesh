@@ -67,6 +67,7 @@ bool kmesh_protocol_data_insert(struct kmesh_data_node *data)
     while (*new) {
         struct kmesh_data_node *this = rb_entry(*new, struct kmesh_data_node, node);
         int cmp_result = strcmp(data->keystring, this->keystring);
+        printk(KERN_INFO "data->keystring:%s    this->keystring:%s\n", data->keystring, this->keystring);
         parent = *new;
         if (cmp_result < 0)
             new = &((*new)->rb_left);
@@ -118,13 +119,16 @@ void kmesh_protocol_data_clean_allcpu(void)
     }
 }
 
-typedef u32 (*bpf_parse_protocol_func)(struct bpf_mem_ptr *msg);
+typedef u32 (*bpf_parse_protocol_func)(struct bpf_sock_addr_kern *ctx);
 extern bpf_parse_protocol_func parse_protocol_func;
 
-typedef struct bpf_mem_ptr *(*bpf_get_protocol_element_func)(char *key);
-extern bpf_get_protocol_element_func get_protocol_element_func;
+typedef int (*bpf_km_strnstr_func)(struct bpf_sock_addr_kern *ctx, const char *key, int key_sz, const char *subptr, int subptr_sz);
+extern bpf_km_strnstr_func km_strnstr_func;
 
-static u32 parse_protocol_impl(struct bpf_mem_ptr *msg)
+typedef int (*bpf_km_strncmp_func)(struct bpf_sock_addr_kern *ctx, const char *key, int key_sz, const char *subptr, int subptr_sz);
+extern bpf_km_strncmp_func km_strncmp_func;
+
+static u32 parse_protocol_impl(struct bpf_sock_addr_kern *ctx)
 {
     u32 ret;
     struct msg_protocol *cur;
@@ -133,37 +137,64 @@ static u32 parse_protocol_impl(struct bpf_mem_ptr *msg)
     {
         if (!cur->parse_protocol_msg)
             continue;
-        ret = cur->parse_protocol_msg(msg);
+        ret = cur->parse_protocol_msg(ctx);
         if (ret)
             break;
     }
     return ret;
 }
 
-static struct bpf_mem_ptr *get_protocol_element_impl(char *key)
-{
+static int bpf_km_strnstr_impl(struct bpf_sock_addr_kern *ctx, const char *key, int key_sz, const char *subptr, int subptr_len) {
+    struct bpf_mem_ptr *msg = (struct bpf_mem_ptr *)(ctx->t_ctx);
+    int len = strnlen(msg->ptr, msg->size);
+
+    if (strcmp(key, "All") == 0) {
+        if (strnstr(msg->ptr, subptr, subptr_len) != NULL) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    struct kmesh_data_node *data = kmesh_protocol_data_search(key);
+    if (!data) {
+    }
+        return 0;
+    if (strnstr((data->value).ptr, subptr, subptr_len) != NULL) {
+        return 1;
+    }
+    return 0;
+}
+
+static int bpf_km_strncmp_impl(struct bpf_sock_addr_kern *ctx, const char *key, int key_sz, const char *subptr, int subptr_len) {
+    struct bpf_mem_ptr *msg = (struct bpf_mem_ptr *)(ctx->t_ctx);
+    int len = strnlen(msg->ptr, msg->size);
+    key_sz = strnlen(key, key_sz);
+    subptr_len = strnlen(subptr, subptr_len);
+
     struct kmesh_data_node *data = kmesh_protocol_data_search(key);
     if (!data)
-        return NULL;
-    return &data->value;
+        return 0;
+    return strncmp((data->value).ptr, subptr, subptr_len);
 }
 
 int __init proto_common_init(void)
 {
     parse_protocol_func = parse_protocol_impl;
-    get_protocol_element_func = get_protocol_element_impl;
+    km_strnstr_func = bpf_km_strnstr_impl;
+    km_strncmp_func = bpf_km_strncmp_impl;
     /* add protocol list */
     g_kmesh_data_root = alloc_percpu(struct rb_root);
     if (!g_kmesh_data_root)
         return -ENOMEM;
-
     return 0;
 }
 
 void __exit proto_common_exit(void)
 {
     parse_protocol_func = NULL;
-    get_protocol_element_func = NULL;
+    km_strnstr_func = NULL;
+    km_strncmp_func = NULL;
     kmesh_protocol_data_clean_allcpu();
     free_percpu(g_kmesh_data_root);
 }

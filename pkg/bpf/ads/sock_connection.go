@@ -141,7 +141,6 @@ func (sc *BpfSockConn) Load() error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

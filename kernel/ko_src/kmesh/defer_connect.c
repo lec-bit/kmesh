@@ -18,18 +18,37 @@
 #include <net/tcp.h>
 #include <net/udp.h>
 
+struct bpf_mem_ptr {
+    void *ptr;
+    __u32 size;
+};
+
 static struct proto *kmesh_defer_proto = NULL;
+static struct proto_ops *kmesh_defer_proto_ops = NULL;
 #define KMESH_DELAY_ERROR -1000
+
+#define BPF_CGROUP_RUN_PROG_INET4_CONNECT_NEW(sk, uaddr, t_ctx) \
+({ \
+    int __ret = -1;  \
+    if (t_ctx == NULL) { \
+        __ret = -EINVAL;  \
+    } else { \
+        __ret = __cgroup_bpf_run_filter_sock_addr(sk, uaddr, CGROUP_INET4_CONNECT, \
+                              t_ctx); \
+    } \
+    __ret; \
+})
+
 
 static int defer_connect(struct sock *sk, struct msghdr *msg, size_t size)
 {
     struct bpf_mem_ptr tmpMem = {0};
     void *kbuf = NULL;
     size_t kbuf_size;
-    struct sockaddr_in addr_in;
     long timeo = 1;
     const struct iovec *iov;
-    struct bpf_sock_ops_kern sock_ops;
+    struct bpf_sock_addr_kern sock_addr;
+    struct sockaddr_in uaddr;
     void __user *ubase;
     int err;
     u32 dport, daddr;
@@ -83,27 +102,14 @@ static int defer_connect(struct sock *sk, struct msghdr *msg, size_t size)
         goto out;
     }
 #else
-    memset(&sock_ops, 0, offsetof(struct bpf_sock_ops_kern, temp));
-    if (sk_fullsock(sk)) {
-        sock_ops.is_fullsock = 1;
-        sock_owned_by_me(sk);
-    }
-    sock_ops.sk = sk;
-    sock_ops.op = BPF_SOCK_OPS_TCP_DEFER_CONNECT_CB;
-    sock_ops.args[0] = ((u64)(&tmpMem) & U32_MAX);
-    sock_ops.args[1] = (((u64)(&tmpMem) >> 32) & U32_MAX);
-
-    (void)BPF_CGROUP_RUN_PROG_SOCK_OPS(&sock_ops);
-    if (sock_ops.replylong[2] && sock_ops.replylong[3]) {
-        daddr = sock_ops.replylong[2];
-        dport = sock_ops.replylong[3];
-    }
+    uaddr.sin_family = AF_INET;
+    uaddr.sin_addr.s_addr = daddr;
+    uaddr.sin_port = dport;
+    err = BPF_CGROUP_RUN_PROG_INET4_CONNECT_NEW(sk, (struct sockaddr *)&uaddr, &tmpMem);
+    printk(KERN_INFO "kmesh cgroup err:%d\n", err);
 #endif
 connect:
-    addr_in.sin_family = AF_INET;
-    addr_in.sin_addr.s_addr = daddr;
-    addr_in.sin_port = dport;
-    err = sk->sk_prot->connect(sk, (struct sockaddr *)&addr_in, sizeof(struct sockaddr_in));
+    err = sk->sk_prot->connect(sk, (struct sockaddr *)&uaddr, sizeof(struct sockaddr_in));
     inet_sk(sk)->bpf_defer_connect = 0;
     if (unlikely(err)) {
         tcp_set_state(sk, TCP_CLOSE);
@@ -127,7 +133,6 @@ static int defer_connect_and_sendmsg(struct sock *sk, struct msghdr *msg, size_t
 
     if (unlikely(inet_sk(sk)->bpf_defer_connect == 1)) {
         lock_sock(sk);
-        inet_sk(sk)->defer_connect = 0;
 
         err = defer_connect(sk, msg, size);
         if (err) {
@@ -171,7 +176,6 @@ static int defer_tcp_connect(struct sock *sk, struct sockaddr *uaddr, int addr_l
     if (inet_sk(sk)->bpf_defer_connect)
         return tcp_v4_connect(sk, uaddr, addr_len);
     inet_sk(sk)->bpf_defer_connect = 1;
-    inet_sk(sk)->defer_connect = 1;
     sk->sk_dport = ((struct sockaddr_in *)uaddr)->sin_port;
     sk_daddr_set(sk, ((struct sockaddr_in *)uaddr)->sin_addr.s_addr);
     sk->sk_socket->state = SS_CONNECTING;
@@ -179,11 +183,26 @@ static int defer_tcp_connect(struct sock *sk, struct sockaddr *uaddr, int addr_l
     return KMESH_DELAY_ERROR;
 }
 
+__poll_t defer_kmesh_poll(struct file *file, struct socket *sock, poll_table *wait) {
+    printk(KERN_INFO "defer_kmesh_poll");
+    struct sock *sk = sock->sk;
+    __poll_t mask;
+    int state;
+    
+    mask = tcp_poll(file, sock, wait);
+    state = inet_sk_state_load(sk);
+    if (state == TCP_SYN_SENT && inet_sk(sk)->bpf_defer_connect) {
+		mask |= EPOLLOUT | EPOLLWRNORM;
+	}
+    return mask;
+}
+
 static int kmesh_build_proto(struct sock *sk)
 {
     if (sk->sk_family != AF_INET)
         return 0;
     WRITE_ONCE(sk->sk_prot, kmesh_defer_proto);
+    WRITE_ONCE(sk->sk_socket->ops, kmesh_defer_proto_ops);
     return 0;
 }
 
@@ -204,9 +223,14 @@ int __init defer_conn_init(void)
     kmesh_defer_proto = kmalloc(sizeof(struct proto), GFP_ATOMIC);
     if (!kmesh_defer_proto)
         return -ENOMEM;
+    kmesh_defer_proto_ops = kmalloc(sizeof(struct proto_ops), GFP_ATOMIC);
+    if (!kmesh_defer_proto_ops)
+        return -ENOMEM;
     *kmesh_defer_proto = tcp_prot;
+    *kmesh_defer_proto_ops = inet_stream_ops;
     kmesh_defer_proto->connect = defer_tcp_connect;
     kmesh_defer_proto->sendmsg = defer_tcp_sendmsg;
+    kmesh_defer_proto_ops->poll = defer_kmesh_poll;
     tcp_register_ulp(&kmesh_defer_ulp_ops);
     return 0;
 }
@@ -216,6 +240,8 @@ void __exit defer_conn_exit(void)
     tcp_unregister_ulp(&kmesh_defer_ulp_ops);
     if (kmesh_defer_proto)
         kfree(kmesh_defer_proto);
+    if (kmesh_defer_proto_ops)
+        kfree(kmesh_defer_proto_ops);
 }
 
 MODULE_LICENSE("GPL");

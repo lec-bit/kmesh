@@ -95,6 +95,17 @@ func (sc *BpfAds) GetKmeshConfigMap() *ebpf.Map {
 	return sc.SockConn.KmeshConfigMap
 }
 
+func (sc *BpfSockConn) RouteLoad() error {
+	err := sc.KmeshTailCallProg.Update(
+		uint32(KMESH_TAIL_CALL_ROUTER_CONFIG),
+		uint32(sc.RouteConfigManager.FD()),
+		ebpf.UpdateAny)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (sc *BpfAds) Load() error {
 	if err := sc.TracePoint.Load(); err != nil {
 		return err
@@ -108,37 +119,41 @@ func (sc *BpfAds) Load() error {
 		return err
 	}
 
+	if err := sc.SockConn.RouteLoad(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (sc *BpfAds) ApiEnvCfg() error {
 	var err error
 
-	if err = utils.SetEnvByBpfMapId(sc.SockOps.KmeshSockopsMaps.KmeshListener, "Listener"); err != nil {
+	if err = utils.SetEnvByBpfMapId(sc.SockConn.KmeshCgroupSockMaps.KmeshListener, "Listener"); err != nil {
 		return err
 	}
 
-	if err = utils.SetEnvByBpfMapId(sc.SockOps.MapOfRouterConfig, "RouteConfiguration"); err != nil {
+	if err = utils.SetEnvByBpfMapId(sc.SockConn.KmeshCgroupSockMaps.MapOfRouterConfig, "RouteConfiguration"); err != nil {
 		return err
 	}
 
-	if err = utils.SetEnvByBpfMapId(sc.SockOps.KmeshCluster, "Cluster"); err != nil {
+	if err = utils.SetEnvByBpfMapId(sc.SockConn.KmeshCgroupSockMaps.KmeshCluster, "Cluster"); err != nil {
 		return err
 	}
 
-	if err = utils.SetEnvByBpfMapId(sc.SockOps.KmeshMap64, "KmeshMap64"); err != nil {
+	if err = utils.SetEnvByBpfMapId(sc.SockConn.KmeshMap64, "KmeshMap64"); err != nil {
 		return err
 	}
 
-	if err = utils.SetEnvByBpfMapId(sc.SockOps.KmeshMap192, "KmeshMap192"); err != nil {
+	if err = utils.SetEnvByBpfMapId(sc.SockConn.KmeshMap192, "KmeshMap192"); err != nil {
 		return err
 	}
 
-	if err = utils.SetEnvByBpfMapId(sc.SockOps.KmeshMap296, "KmeshMap296"); err != nil {
+	if err = utils.SetEnvByBpfMapId(sc.SockConn.KmeshMap296, "KmeshMap296"); err != nil {
 		return err
 	}
 
-	if err = utils.SetEnvByBpfMapId(sc.SockOps.KmeshMap1600, "KmeshMap1600"); err != nil {
+	if err = utils.SetEnvByBpfMapId(sc.SockConn.KmeshMap1600, "KmeshMap1600"); err != nil {
 		return err
 	}
 	return nil
@@ -175,7 +190,7 @@ func (sc *BpfAds) Detach() error {
 }
 
 func (sc *BpfAds) GetClusterStatsMap() *ebpf.Map {
-	return sc.SockOps.KmeshSockopsMaps.KmeshClusterStats
+	return sc.SockConn.KmeshCgroupSockMaps.KmeshClusterStats
 }
 
 func AdsL7Enabled() bool {

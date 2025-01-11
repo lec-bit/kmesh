@@ -87,69 +87,6 @@ func (sc *BpfSockOps) loadKmeshSockopsObjects() (*ebpf.CollectionSpec, error) {
 	return spec, nil
 }
 
-func (sc *BpfSockOps) loadKmeshFilterObjects() (*ebpf.CollectionSpec, error) {
-	var (
-		err  error
-		spec *ebpf.CollectionSpec
-		opts ebpf.CollectionOptions
-	)
-
-	opts.Maps.PinPath = sc.Info.MapPath
-	err = sc.KmeshTailCallProg.Update(
-		uint32(KMESH_TAIL_CALL_FILTER_CHAIN),
-		uint32(sc.FilterChainManager.FD()),
-		ebpf.UpdateAny)
-	if err != nil {
-		return nil, err
-	}
-
-	err = sc.KmeshTailCallProg.Update(
-		uint32(KMESH_TAIL_CALL_FILTER),
-		uint32(sc.FilterManager.FD()),
-		ebpf.UpdateAny)
-	if err != nil {
-		return nil, err
-	}
-
-	return spec, nil
-}
-
-func (sc *BpfSockOps) loadRouteConfigObjects() (*ebpf.CollectionSpec, error) {
-	var (
-		err  error
-		spec *ebpf.CollectionSpec
-		opts ebpf.CollectionOptions
-	)
-	opts.Maps.PinPath = sc.Info.MapPath
-	err = sc.KmeshTailCallProg.Update(
-		uint32(KMESH_TAIL_CALL_ROUTER_CONFIG),
-		uint32(sc.RouteConfigManager.FD()),
-		ebpf.UpdateAny)
-	if err != nil {
-		return nil, err
-	}
-
-	return spec, nil
-}
-
-func (sc *BpfSockOps) loadKmeshClusterObjects() (*ebpf.CollectionSpec, error) {
-	var (
-		err  error
-		spec *ebpf.CollectionSpec
-		opts ebpf.CollectionOptions
-	)
-	opts.Maps.PinPath = sc.Info.MapPath
-	err = sc.KmeshTailCallProg.Update(
-		uint32(KMESH_TAIL_CALL_CLUSTER),
-		uint32(sc.ClusterManager.FD()),
-		ebpf.UpdateAny)
-	if err != nil {
-		return nil, err
-	}
-
-	return spec, nil
-}
-
 func (sc *BpfSockOps) Load() error {
 	/* load kmesh sockops main bpf prog */
 	spec, err := sc.loadKmeshSockopsObjects()
@@ -160,19 +97,6 @@ func (sc *BpfSockOps) Load() error {
 	prog := spec.Programs["sockops_prog"]
 	sc.Info.Type = prog.Type
 	sc.Info.AttachType = prog.AttachType
-
-	/* load kmesh sockops tail call bpf prog */
-	if _, err := sc.loadKmeshFilterObjects(); err != nil {
-		return err
-	}
-
-	if _, err := sc.loadRouteConfigObjects(); err != nil {
-		return err
-	}
-
-	if _, err := sc.loadKmeshClusterObjects(); err != nil {
-		return err
-	}
 
 	return nil
 }
@@ -187,18 +111,11 @@ func (sc *BpfSockOps) Attach() error {
 
 	// pin bpf_link and bpf_tail_call map
 	// pin bpf_link, after restart, update prog in bpf_link
-	// tail_call map cannot pin in SetMapPinType->LoadAndAssign, we pin them independently
-	// When we need to update tail_call map, delete the old map and then pin the new one.
-	tailCallmapPinPath := filepath.Join(sc.Info.BpfFsPath, constants.TailCallMap)
 	progPinPath := filepath.Join(sc.Info.BpfFsPath, constants.Prog_link)
 	if restart.GetStartType() == restart.Restart {
 		if sc.Link, err = utils.BpfProgUpdate(progPinPath, cgopt); err != nil {
 			return err
 		}
-		// Unpin tailcallmap. Considering that kmesh coredump may not have
-		// this path after an unexpected restart, here we unpin the file by
-		// directly removing it without doing error handling.
-		os.Remove(tailCallmapPinPath)
 	} else {
 		sc.Link, err = link.AttachCgroup(cgopt)
 		if err != nil {
@@ -207,9 +124,6 @@ func (sc *BpfSockOps) Attach() error {
 		if err = sc.Link.Pin(progPinPath); err != nil {
 			return err
 		}
-	}
-	if err = sc.KmeshSockopsMaps.KmeshTailCallProg.Pin(tailCallmapPinPath); err != nil {
-		return err
 	}
 	return nil
 }

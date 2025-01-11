@@ -28,22 +28,13 @@ static inline Route__RouteConfiguration *map_lookup_route_config(const char *rou
 }
 
 static inline int
-virtual_host_match_check(Route__VirtualHost *virt_host, address_t *addr, ctx_buff_t *ctx, struct bpf_mem_ptr *host)
+virtual_host_match_check(Route__VirtualHost *virt_host, address_t *addr, ctx_buff_t *ctx, char *host_key)
 {
     int i;
     void *domains = NULL;
     void *domain = NULL;
     void *ptr;
     __u32 ptr_length;
-
-    if (!host)
-        return 0;
-
-    ptr = _(host->ptr);
-    if (!ptr)
-        return 0;
-
-    ptr_length = _(host->size);
 
     if (!virt_host->domains)
         return 0;
@@ -64,7 +55,7 @@ virtual_host_match_check(Route__VirtualHost *virt_host, address_t *addr, ctx_buf
         if (((char *)domain)[0] == '*' && ((char *)domain)[1] == '\0')
             return 1;
 
-        if (bpf_strnstr(ptr, domain, ptr_length) != NULL) {
+        if (bpf_km_strnstr(ctx, host_key, 5, domain, BPF_DATA_MAX_LEN) != NULL) {
             BPF_LOG(
                 DEBUG,
                 ROUTER_CONFIG,
@@ -94,7 +85,6 @@ virtual_host_match(Route__RouteConfiguration *route_config, address_t *addr, ctx
     Route__VirtualHost *virt_host = NULL;
     Route__VirtualHost *virt_host_allow_any = NULL;
     char host_key[5] = {'H', 'o', 's', 't', '\0'};
-    struct bpf_mem_ptr *host;
 
     if (route_config->n_virtual_hosts <= 0 || route_config->n_virtual_hosts > KMESH_PER_VIRT_HOST_NUM) {
         BPF_LOG(WARN, ROUTER_CONFIG, "invalid virt hosts num=%d\n", route_config->n_virtual_hosts);
@@ -104,12 +94,6 @@ virtual_host_match(Route__RouteConfiguration *route_config, address_t *addr, ctx
     ptrs = KMESH_GET_PTR_VAL(_(route_config->virtual_hosts), void *);
     if (!ptrs) {
         BPF_LOG(ERR, ROUTER_CONFIG, "failed to get virtual hosts\n");
-        return NULL;
-    }
-
-    host = bpf_get_msg_header_element(host_key);
-    if (!host) {
-        BPF_LOG(ERR, ROUTER_CONFIG, "failed to get URI in msg\n");
         return NULL;
     }
 
@@ -127,27 +111,28 @@ virtual_host_match(Route__RouteConfiguration *route_config, address_t *addr, ctx
             continue;
         }
 
-        if (virtual_host_match_check(virt_host, addr, ctx, host))
+        if (virtual_host_match_check(virt_host, addr, ctx, host_key))
             return virt_host;
     }
     // allow_any as the default virt_host
-    if (virt_host_allow_any && virtual_host_match_check(virt_host_allow_any, addr, ctx, host))
+    if (virt_host_allow_any && virtual_host_match_check(virt_host_allow_any, addr, ctx, host_key))
         return virt_host_allow_any;
     return NULL;
 }
 
-static inline bool check_header_value_match(char *target, struct bpf_mem_ptr *head, bool exact)
+static inline bool check_header_value_match(struct bpf_sock_addr *ctx, char *header_name, char *target, bool exact)
 {
-    BPF_LOG(DEBUG, ROUTER_CONFIG, "header match, is exact:%d value:%s\n", exact, target);
-    long target_length = bpf_strnlen(target, BPF_DATA_MAX_LEN);
-    if (!exact)
-        return (bpf__strncmp(target, target_length, _(head->ptr)) == 0);
-    if (target_length != _(head->size))
-        return false;
-    return (bpf__strncmp(target, target_length, _(head->ptr)) == 0);
+    int ret = 0;
+    ret = bpf_km_strncmp(ctx, header_name, BPF_DATA_MAX_LEN, target, BPF_DATA_MAX_LEN);
+    if (ret == 2 && exact) {
+        return true;
+    } else if (ret == 1 && !exact){
+        return true;
+    }
+    return false;
 }
 
-static inline bool check_headers_match(Route__RouteMatch *match)
+static inline bool check_headers_match(struct bpf_sock_addr *ctx, Route__RouteMatch *match)
 {
     int i;
     void *ptrs = NULL;
@@ -181,19 +166,17 @@ static inline bool check_headers_match(Route__RouteMatch *match)
             BPF_LOG(ERR, ROUTER_CONFIG, "failed to get match headers in route match\n");
             return false;
         }
-        msg_header = (struct bpf_mem_ptr *)bpf_get_msg_header_element(header_name);
-        if (!msg_header) {
-            BPF_LOG(DEBUG, ROUTER_CONFIG, "failed to get header value form msg\n");
-            return false;
-        }
-        BPF_LOG(DEBUG, ROUTER_CONFIG, "header match check, name:%s\n", header_name);
+
+        BPF_LOG(ERR, ROUTER_CONFIG, "header match check, name:%s\n", header_name);
         switch (header_match->header_match_specifier_case) {
         case ROUTE__HEADER_MATCHER__HEADER_MATCH_SPECIFIER_EXACT_MATCH: {
             config_header_value = KMESH_GET_PTR_VAL(header_match->exact_match, char *);
             if (config_header_value == NULL) {
                 BPF_LOG(ERR, ROUTER_CONFIG, "failed to get config_header_value\n");
+                return false;
             }
-            if (!check_header_value_match(config_header_value, msg_header, true)) {
+            if (!check_header_value_match(ctx, header_name, config_header_value, true)) {
+                BPF_LOG(ERR, ROUTER_CONFIG, "check_header_value_match failed\n");
                 return false;
             }
             break;
@@ -202,8 +185,10 @@ static inline bool check_headers_match(Route__RouteMatch *match)
             config_header_value = KMESH_GET_PTR_VAL(header_match->prefix_match, char *);
             if (config_header_value == NULL) {
                 BPF_LOG(ERR, ROUTER_CONFIG, "prefix:failed to get config_header_value\n");
+                return false;
             }
-            if (!check_header_value_match(config_header_value, msg_header, false)) {
+            if (!check_header_value_match(ctx, header_name, config_header_value, false)) {
+                BPF_LOG(ERR, ROUTER_CONFIG, "check_header_value_match failed\n");
                 return false;
             }
             break;
@@ -222,10 +207,7 @@ virtual_host_route_match_check(Route__Route *route, address_t *addr, ctx_buff_t 
     Route__RouteMatch *match;
     char *prefix;
     void *ptr;
-
-    ptr = _(msg->ptr);
-    if (!ptr)
-        return 0;
+    char all_key[4] = {'A', 'l', 'l', '\0'};
 
     if (!route->match)
         return 0;
@@ -237,11 +219,12 @@ virtual_host_route_match_check(Route__Route *route, address_t *addr, ctx_buff_t 
     prefix = KMESH_GET_PTR_VAL(match->prefix, char *);
     if (!prefix)
         return 0;
-
-    if (bpf_strnstr(ptr, prefix, BPF_DATA_MAX_LEN) == NULL)
+    if (bpf_km_strnstr(ctx, all_key, 4, prefix, BPF_DATA_MAX_LEN) == 0) {
+        BPF_LOG(ERR, ROUTER_CONFIG, "bpf_strnstr prefix failed:%s\n", prefix);
         return 0;
+    }
 
-    if (!check_headers_match(match))
+    if (!check_headers_match(ctx, match))
         return 0;
 
     BPF_LOG(DEBUG, ROUTER_CONFIG, "match route, name=\"%s\"\n", (char *)KMESH_GET_PTR_VAL(route->name, char *));
