@@ -29,6 +29,7 @@ import (
 	"github.com/cilium/ebpf"
 
 	"kmesh.net/kmesh/daemon/options"
+	"kmesh.net/kmesh/pkg/bpf/general"
 	"kmesh.net/kmesh/pkg/bpf/utils"
 	"kmesh.net/kmesh/pkg/logger"
 )
@@ -105,6 +106,17 @@ func (sc *BpfAds) GetKmeshConfigMap() *ebpf.Map {
 	return sc.SockConn.KmConfigmap
 }
 
+func (sc *BpfSockConn) RouteLoad() error {
+	err := sc.KmCgrptailcall.Update(
+		uint32(KMESH_TAIL_CALL_ROUTER_CONFIG),
+		uint32(sc.RouteConfigManager.FD()),
+		ebpf.UpdateAny)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (sc *BpfAds) Load() error {
 	if err := sc.TracePoint.Load(); err != nil {
 		return err
@@ -118,6 +130,10 @@ func (sc *BpfAds) Load() error {
 		return err
 	}
 
+	if err := sc.SockConn.RouteLoad(); err != nil {
+		return err
+	}
+
 	if err := sc.Tc.LoadTC(); err != nil {
 		return err
 	}
@@ -128,31 +144,31 @@ func (sc *BpfAds) Load() error {
 func (sc *BpfAds) ApiEnvCfg() error {
 	var err error
 
-	if err = utils.SetEnvByBpfMapId(sc.SockOps.KmeshSockopsMaps.KmListener, "Listener"); err != nil {
+	if err = utils.SetEnvByBpfMapId(sc.SockConn.KmeshCgroupSockMaps.KmListener, "Listener"); err != nil {
 		return err
 	}
 
-	if err = utils.SetEnvByBpfMapId(sc.SockOps.KmRouterconfig, "RouteConfiguration"); err != nil {
+	if err = utils.SetEnvByBpfMapId(sc.SockConn.KmeshCgroupSockMaps.KmRouterconfig, "RouteConfiguration"); err != nil {
 		return err
 	}
 
-	if err = utils.SetEnvByBpfMapId(sc.SockOps.KmCluster, "Cluster"); err != nil {
+	if err = utils.SetEnvByBpfMapId(sc.SockConn.KmeshCgroupSockMaps.KmCluster, "Cluster"); err != nil {
 		return err
 	}
 
-	if err = utils.SetEnvByBpfMapId(sc.SockOps.KmeshMap64, "KmeshMap64"); err != nil {
+	if err = utils.SetEnvByBpfMapId(sc.SockConn.KmeshMap64, "KmeshMap64"); err != nil {
 		return err
 	}
 
-	if err = utils.SetEnvByBpfMapId(sc.SockOps.KmeshMap192, "KmeshMap192"); err != nil {
+	if err = utils.SetEnvByBpfMapId(sc.SockConn.KmeshMap192, "KmeshMap192"); err != nil {
 		return err
 	}
 
-	if err = utils.SetEnvByBpfMapId(sc.SockOps.KmeshMap296, "KmeshMap296"); err != nil {
+	if err = utils.SetEnvByBpfMapId(sc.SockConn.KmeshMap296, "KmeshMap296"); err != nil {
 		return err
 	}
 
-	if err = utils.SetEnvByBpfMapId(sc.SockOps.KmeshMap1600, "KmeshMap1600"); err != nil {
+	if err = utils.SetEnvByBpfMapId(sc.SockConn.KmeshMap1600, "KmeshMap1600"); err != nil {
 		return err
 	}
 	return nil
@@ -194,7 +210,7 @@ func (sc *BpfAds) Detach() error {
 }
 
 func (sc *BpfAds) GetClusterStatsMap() *ebpf.Map {
-	return sc.SockOps.KmeshSockopsMaps.KmClusterstats
+	return sc.SockConn.KmeshCgroupSockMaps.KmClusterstats
 }
 
 func AdsL7Enabled() bool {
