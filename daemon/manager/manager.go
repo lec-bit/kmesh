@@ -21,6 +21,7 @@ import (
 	"flag"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/cilium/ebpf/rlimit"
@@ -34,6 +35,7 @@ import (
 	"kmesh.net/kmesh/pkg/bpf/restart"
 	"kmesh.net/kmesh/pkg/cni"
 	"kmesh.net/kmesh/pkg/controller"
+	"kmesh.net/kmesh/pkg/kolog"
 	"kmesh.net/kmesh/pkg/logger"
 	"kmesh.net/kmesh/pkg/status"
 )
@@ -80,7 +82,9 @@ func Execute(configs *options.BootstrapConfigs) error {
 	if err != nil {
 		log.Warn("rlimit.RemoveMemlock failed")
 	}
-
+	var wg sync.WaitGroup
+	wg.Add(1)
+	kolog.KmeshModuleLog(&wg)
 	bpfLoader := bpf.NewBpfLoader(configs.BpfConfig)
 	// there could be a case that bpf loader partially start failed, we still need to stop it, otherwise it cannot recover
 	// https://github.com/kmesh-net/kmesh/issues/951

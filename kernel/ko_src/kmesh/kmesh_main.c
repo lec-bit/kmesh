@@ -19,14 +19,20 @@ static int __init kmesh_init(void)
     int ret;
 
     ret = defer_conn_init();
-    if (ret)
+    if (ret) {
+        LOG(KERN_ERR, "defer_conn_init failed, ret:%d\n", ret);
         return ret;
+    }
 
     ret = proto_common_init();
-    if (ret)
+    if (ret) {
+        LOG(KERN_ERR, "proto_common_init failed, ret:%d\n", ret);
         return ret;
+    }
 
     ret = kmesh_register_http_1_1_init();
+
+    LOG(KERN_INFO, "kmesh ko init\n");
     return ret;
 }
 
@@ -34,6 +40,7 @@ static void __exit kmesh_exit(void)
 {
     defer_conn_exit();
     proto_common_exit();
+    LOG(KERN_INFO, "kmesh ko exit\n");
 }
 
 module_init(kmesh_init);

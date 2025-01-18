@@ -18,10 +18,7 @@
 #include <net/tcp.h>
 #include <net/udp.h>
 
-struct bpf_mem_ptr {
-    void *ptr;
-    __u32 size;
-};
+#include "defer_connect.h"
 
 static struct proto *kmesh_defer_proto = NULL;
 static struct proto_ops *kmesh_defer_proto_ops = NULL;
@@ -184,7 +181,6 @@ static int defer_tcp_connect(struct sock *sk, struct sockaddr *uaddr, int addr_l
 
 __poll_t defer_kmesh_poll(struct file *file, struct socket *sock, poll_table *wait)
 {
-    printk(KERN_INFO "defer_kmesh_poll");
     struct sock *sk = sock->sk;
     __poll_t mask;
     int state;
