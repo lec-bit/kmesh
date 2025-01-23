@@ -25,7 +25,24 @@ static struct proto_ops *kmesh_defer_proto_ops = NULL;
 
 #define KMESH_DELAY_ERROR -1000
 
-#define BPF_CGROUP_RUN_PROG_INET4_CONNECT_NEW(sk, uaddr, t_ctx)                                                        \
+#if KERNEL_6
+#define BPF_CGROUP_RUN_PROG_INET4_CONNECT_NEW(sk, uaddr, uaddrlen, t_ctx)                                              \
+    ({                                                                                                                 \
+        int __ret = -1;                                                                                                \
+        if (t_ctx == NULL) {                                                                                           \
+            __ret = -EINVAL;                                                                                           \
+        } else {                                                                                                       \
+            __ret = __cgroup_bpf_run_filter_sock_addr(sk, uaddr, uaddrlen, CGROUP_INET4_CONNECT, t_ctx, NULL);         \
+        }                                                                                                              \
+        __ret;                                                                                                         \
+    })
+
+#define SET_DEFER_CONNECT_ON(sk) (inet_set_bit(DEFER_CONNECT, sk))
+#define SET_DEFER_CONNECT_OFF(sk) (inet_clear_bit(DEFER_CONNECT, sk))
+#define IS_DEFER_CONNECT(sk) (inet_test_bit(DEFER_CONNECT, sk))
+#else
+
+#define BPF_CGROUP_RUN_PROG_INET4_CONNECT_NEW(sk, uaddr, uaddrlen, t_ctx)                                                        \
     ({                                                                                                                 \
         int __ret = -1;                                                                                                \
         if (t_ctx == NULL) {                                                                                           \
@@ -36,6 +53,11 @@ static struct proto_ops *kmesh_defer_proto_ops = NULL;
         __ret;                                                                                                         \
     })
 
+#define SET_DEFER_CONNECT_ON(sk) (inet_sk(sk)->defer_connect = 1)
+#define SET_DEFER_CONNECT_OFF(sk) (inet_sk(sk)->defer_connect = 0)
+#define IS_DEFER_CONNECT(sk) (inet_sk(sk)->defer_connect == 1)
+#endif
+
 static int defer_connect(struct sock *sk, struct msghdr *msg, size_t size)
 {
     struct bpf_mem_ptr tmpMem = {0};
@@ -45,6 +67,7 @@ static int defer_connect(struct sock *sk, struct msghdr *msg, size_t size)
     const struct iovec *iov;
     struct bpf_sock_addr_kern sock_addr;
     struct sockaddr_in uaddr;
+    int uaddrlen = sizeof(struct sockaddr_in);
     void __user *ubase;
     int err;
     u32 dport, daddr;
@@ -56,7 +79,11 @@ static int defer_connect(struct sock *sk, struct msghdr *msg, size_t size)
         ubase = iov->iov_base;
         kbuf_size = iov->iov_len;
     } else if (iter_is_iovec(&msg->msg_iter)) {
+#if KERNEL_6
+        iov = msg->msg_iter.__iov;
+#else
         iov = msg->msg_iter.iov;
+#endif
         ubase = iov->iov_base;
         kbuf_size = iov->iov_len;
 #if ITER_TYPE_IS_UBUF
@@ -101,12 +128,12 @@ static int defer_connect(struct sock *sk, struct msghdr *msg, size_t size)
     uaddr.sin_family = AF_INET;
     uaddr.sin_addr.s_addr = daddr;
     uaddr.sin_port = dport;
-    err = BPF_CGROUP_RUN_PROG_INET4_CONNECT_NEW(sk, (struct sockaddr *)&uaddr, &tmpMem);
+    err = BPF_CGROUP_RUN_PROG_INET4_CONNECT_NEW(sk, (struct sockaddr *)&uaddr, &uaddrlen, &tmpMem);
     printk(KERN_ERR "kmesh cgroup err:%d\n", err);
 #endif
 connect:
     err = sk->sk_prot->connect(sk, (struct sockaddr *)&uaddr, sizeof(struct sockaddr_in));
-    inet_sk(sk)->bpf_defer_connect = 0;
+    SET_DEFER_CONNECT_OFF(sk);
     if (unlikely(err)) {
         tcp_set_state(sk, TCP_CLOSE);
         sk->sk_route_caps = 0;
@@ -127,7 +154,7 @@ static int defer_connect_and_sendmsg(struct sock *sk, struct msghdr *msg, size_t
     struct socket *sock;
     int err = 0;
 
-    if (unlikely(inet_sk(sk)->bpf_defer_connect == 1)) {
+    if (unlikely(IS_DEFER_CONNECT(sk))) {
         lock_sock(sk);
 
         err = defer_connect(sk, msg, size);
@@ -157,21 +184,14 @@ static int defer_tcp_sendmsg(struct sock *sk, struct msghdr *msg, size_t size)
 
 static int defer_tcp_connect(struct sock *sk, struct sockaddr *uaddr, int addr_len)
 {
-    /* Kmesh is not compatible with defer_connect, so we
-     * need to check whether defer_connect is set to 1.
-     * Kmesh reuses the defer_connect flag to enable the
-     * epoll to be triggered normally.
-     */
-    if (inet_sk(sk)->defer_connect == 1)
-        return -ENOTSUPP;
-    /* bpf_defer_connect is 0 when you first enter the connection.
+    /* defer_connect is 0 when you first enter the connection.
      * When you delay link establishment from sendmsg, the value
-     * of bpf_defer_connect should be 1 and the normal connect function
+     * of defer_connect should be 1 and the normal connect function
      * needs to be used.
      */
-    if (inet_sk(sk)->bpf_defer_connect)
+    if (IS_DEFER_CONNECT(sk))
         return tcp_v4_connect(sk, uaddr, addr_len);
-    inet_sk(sk)->bpf_defer_connect = 1;
+    SET_DEFER_CONNECT_ON(sk);
     sk->sk_dport = ((struct sockaddr_in *)uaddr)->sin_port;
     sk_daddr_set(sk, ((struct sockaddr_in *)uaddr)->sin_addr.s_addr);
     sk->sk_socket->state = SS_CONNECTING;
@@ -187,7 +207,7 @@ __poll_t defer_kmesh_poll(struct file *file, struct socket *sock, poll_table *wa
 
     mask = tcp_poll(file, sock, wait);
     state = inet_sk_state_load(sk);
-    if (state == TCP_SYN_SENT && inet_sk(sk)->bpf_defer_connect) {
+    if (state == TCP_SYN_SENT && IS_DEFER_CONNECT(sk)) {
         mask |= EPOLLOUT | EPOLLWRNORM;
     }
     return mask;
