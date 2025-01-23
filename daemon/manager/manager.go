@@ -34,6 +34,7 @@ import (
 	"kmesh.net/kmesh/pkg/bpf/restart"
 	"kmesh.net/kmesh/pkg/cni"
 	"kmesh.net/kmesh/pkg/controller"
+	"kmesh.net/kmesh/pkg/kolog"
 	"kmesh.net/kmesh/pkg/logger"
 	"kmesh.net/kmesh/pkg/status"
 )
@@ -93,6 +94,7 @@ func Execute(configs *options.BootstrapConfigs) error {
 	stopCh := make(chan struct{})
 	defer close(stopCh)
 
+	kolog.KmeshModuleLog(stopCh)
 	c := controller.NewController(configs, bpfLoader.GetBpfKmesh(), bpfLoader.GetBpfWorkload())
 	if err := c.Start(stopCh); err != nil {
 		return err

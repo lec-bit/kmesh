@@ -66,10 +66,13 @@ static int defer_connect(struct sock *sk, struct msghdr *msg, size_t size)
         goto connect;
 
     kbuf = (void *)kmalloc(kbuf_size, GFP_KERNEL);
-    if (!kbuf)
+    if (!kbuf) {
+        LOG(KERN_ERR, "kbuf kmalloc failed\n");
         return -EFAULT;
+    }
 
     if (copy_from_user(kbuf, ubase, kbuf_size)) {
+        LOG(KERN_ERR, "copy_from_user failed\n");
         err = -EFAULT;
         goto out;
     }
@@ -105,6 +108,7 @@ connect:
     err = sk->sk_prot->connect(sk, (struct sockaddr *)&uaddr, sizeof(struct sockaddr_in));
     inet_sk(sk)->defer_connect = 0;
     if (unlikely(err)) {
+        LOG(KERN_ERR, "connect failed:%d\n", err);
         tcp_set_state(sk, TCP_CLOSE);
         sk->sk_route_caps = 0;
         inet_sk(sk)->inet_dport = 0;
@@ -146,8 +150,10 @@ static int defer_tcp_sendmsg(struct sock *sk, struct msghdr *msg, size_t size)
     int ret;
 
     ret = defer_connect_and_sendmsg(sk, msg, size);
-    if (ret)
+    if (ret) {
+        LOG(KERN_ERR, "defer_connect_and_sendmsg failed, ret:%d\n", ret);
         return ret;
+    }
 
     return tcp_sendmsg(sk, msg, size);
 }
@@ -192,11 +198,10 @@ static struct tcp_ulp_ops kmesh_defer_ulp_ops __read_mostly = {
 int __init defer_conn_init(void)
 {
     kmesh_defer_proto = kmalloc(sizeof(struct proto), GFP_ATOMIC);
-    if (!kmesh_defer_proto)
+    if (!kmesh_defer_proto) {
+        LOG(KERN_ERR, "kmesh_defer_proto kmalloc failed\n");
         return -ENOMEM;
-    kmesh_defer_proto_ops = kmalloc(sizeof(struct proto_ops), GFP_ATOMIC);
-    if (!kmesh_defer_proto_ops)
-        return -ENOMEM;
+    }
     *kmesh_defer_proto = tcp_prot;
     kmesh_defer_proto->connect = defer_tcp_connect;
     kmesh_defer_proto->sendmsg = defer_tcp_sendmsg;
