@@ -10,12 +10,12 @@
 obj-m := kmesh.o
 kmesh-objs = kmesh_main.o defer_connect.o \
 	kmesh_parse_protocol_data.o \
-	kmesh_parse_http_1_1.o
+	kmesh_parse_http_1_1.o kmesh_func.o
 
 KERNELDIR ?= /lib/modules/$(shell uname -r)/build
 PWD := $(shell pwd)
 
-ccflags-y += -Wno-discarded-qualifiers
+ccflags-y += -Wno-discarded-qualifiers -DKERNEL_KFUNC
 
 all:
 	$(MAKE) -C $(KERNELDIR) M=$(PWD)

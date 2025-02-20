@@ -42,9 +42,9 @@ static inline int sock4_traffic_control(struct bpf_sock_addr *ctx)
     BPF_LOG(DEBUG, KMESH, "bpf find listener addr=[%s:%u]\n", ip2str(&ip, 1), bpf_ntohs(ctx->user_port));
 
 #if ENHANCED_KERNEL
-    ret = bpf_getsockopt(ctx, IPPROTO_TCP, TCP_ULP, (void *)kmesh_module_name_get, KMESH_MODULE_NAME_LEN);
+    ret = bpf_km_getsockopt(ctx, IPPROTO_TCP, TCP_ULP, (void *)kmesh_module_name_get, KMESH_MODULE_NAME_LEN);
     if (ret != 0 || bpf__strncmp(kmesh_module_name_get, KMESH_MODULE_NAME_LEN, kmesh_module_name)) {
-        ret = bpf_setsockopt(ctx, IPPROTO_TCP, TCP_ULP, (void *)kmesh_module_name, sizeof(kmesh_module_name));
+        ret = bpf_km_setsockopt(ctx, IPPROTO_TCP, TCP_ULP, (void *)kmesh_module_name, sizeof(kmesh_module_name));
         if (ret)
             BPF_LOG(ERR, KMESH, "bpf set sockopt failed! ret %d\n", ret);
         return 0;
