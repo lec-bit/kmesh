@@ -33,12 +33,13 @@ var (
 
 // Used for timestamp conversion
 func getBootTime() (time.Time, error) {
-	data, err := os.ReadFile("/proc/stat")
+	data, err := os.Open("/proc/stat")
 	if err != nil {
 		return time.Time{}, err
 	}
-
-	for _, line := range strings.Split(string(data), "\n") {
+	scanner := bufio.NewScanner(data)
+	for scanner.Scan() {
+		line := scanner.Text()
 		if strings.HasPrefix(line, "btime ") {
 			parts := strings.Fields(line)
 			if len(parts) < 2 {
@@ -102,21 +103,16 @@ func KmeshModuleLog(stopCh <-chan struct{}) {
 		}
 		defer file.Close()
 
-		reader := bufio.NewReader(file)
+		scanner := bufio.NewScanner(file)
 		for {
 			select {
 			case <-stopCh:
 				return
 			default:
-				line, err := reader.ReadString('\n')
-				if err != nil {
-					if err.Error() == "EOF" {
-						time.Sleep(100 * time.Millisecond)
-						continue
-					}
-					log.Fatalf("ReadString err: %v", err)
+				if scanner.Scan() {
+					line := scanner.Text()
+					parseKmsgLine(line, bootTime, startTimestamp)
 				}
-				parseKmsgLine(line, bootTime, startTimestamp)
 			}
 		}
 	}()
