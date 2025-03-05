@@ -8,4 +8,5 @@ container_id=$(run_docker_container)
 build_kmesh $container_id
 clean_container $container_id
 
+make kmesh-ko
 sudo chmod -R a+r out/
