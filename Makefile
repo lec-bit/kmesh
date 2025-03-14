@@ -100,7 +100,7 @@ kmesh-bpf:
 kmesh-ko:
 	$(QUIET) find $(ROOT_DIR)/mk -name "*.pc" | xargs sed -i "s#^prefix=.*#prefix=${ROOT_DIR}#g"
 	$(call printlog, BUILD, "kernel")
-	$(QUIET) make -C kernel/ko_src
+	$(QUIET) make -C kernel/ko_src ROOT_DIR=$(ROOT_DIR)
 
 all-binary:
 	$(QUIET) find $(ROOT_DIR)/mk -name "*.pc" | xargs sed -i "s#^prefix=.*#prefix=${ROOT_DIR}#g"
