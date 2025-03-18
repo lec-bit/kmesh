@@ -124,6 +124,15 @@ function set_enhanced_kernel_env() {
             export KERNEL_HEADER_LINUX_BPF=/usr/include/linux/bpf.h
     fi
 
+    uname -a
+    grep CONFIG_DEBUG_INFO_BTF /boot/config-$(uname -r)
+    ll /sys/kernel/btf/vmlinux
+    lsmod | grep sha
+    ls /boot
+    ls /sys/kernel/btf
+    ls /sys/kernel/btf/vmlinux
+    bpftool feature probe kernel | grep -E BTF
+    
     # The 6.x Linux kernel already has complete support for kfunc capabilities,
     # allowing all features of kmesh to run directly.
     KERNEL_MAJOR=$(uname -r | awk -F '.' '{print $1}')
