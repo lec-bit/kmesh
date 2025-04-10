@@ -1,6 +1,3 @@
-//go:build enhanced
-// +build enhanced
-
 /*
  * Copyright The Kmesh Authors.
  *
@@ -28,20 +25,11 @@ import (
 	"github.com/cilium/ebpf"
 	"github.com/cilium/ebpf/link"
 
-	bpf2go "kmesh.net/kmesh/bpf/kmesh/bpf2go/kernelnative/enhanced"
 	"kmesh.net/kmesh/daemon/options"
-	"kmesh.net/kmesh/pkg/bpf/general"
 	"kmesh.net/kmesh/pkg/bpf/restart"
 	"kmesh.net/kmesh/pkg/bpf/utils"
 	"kmesh.net/kmesh/pkg/constants"
-	helper "kmesh.net/kmesh/pkg/utils"
 )
-
-type BpfSockOps struct {
-	Info general.BpfInfo
-	Link link.Link
-	bpf2go.KmeshSockopsObjects
-}
 
 func (sc *BpfSockOps) NewBpf(cfg *options.BpfConfig) error {
 	sc.Info.MapPath = cfg.BpfFsPath + "/bpf_kmesh/map/"
@@ -71,11 +59,7 @@ func (sc *BpfSockOps) loadKmeshSockopsObjects() (*ebpf.CollectionSpec, error) {
 	)
 
 	opts.Maps.PinPath = sc.Info.MapPath
-	if helper.KernelVersionLowerThan5_13() {
-		spec, err = bpf2go.LoadKmeshSockopsCompat()
-	} else {
-		spec, err = bpf2go.LoadKmeshSockops()
-	}
+	spec, err = loadKmeshSockOps()
 	if err != nil || spec == nil {
 		return nil, err
 	}
@@ -87,70 +71,6 @@ func (sc *BpfSockOps) loadKmeshSockopsObjects() (*ebpf.CollectionSpec, error) {
 
 	return spec, nil
 }
-
-func (sc *BpfSockOps) loadKmeshFilterObjects() (*ebpf.CollectionSpec, error) {
-	var (
-		err  error
-		spec *ebpf.CollectionSpec
-		opts ebpf.CollectionOptions
-	)
-
-	opts.Maps.PinPath = sc.Info.MapPath
-	err = sc.KmSkopstailcall.Update(
-		uint32(KMESH_TAIL_CALL_FILTER_CHAIN),
-		uint32(sc.FilterChainManager.FD()),
-		ebpf.UpdateAny)
-	if err != nil {
-		return nil, err
-	}
-
-	err = sc.KmSkopstailcall.Update(
-		uint32(KMESH_TAIL_CALL_FILTER),
-		uint32(sc.FilterManager.FD()),
-		ebpf.UpdateAny)
-	if err != nil {
-		return nil, err
-	}
-
-	return spec, nil
-}
-
-func (sc *BpfSockOps) loadRouteConfigObjects() (*ebpf.CollectionSpec, error) {
-	var (
-		err  error
-		spec *ebpf.CollectionSpec
-		opts ebpf.CollectionOptions
-	)
-	opts.Maps.PinPath = sc.Info.MapPath
-	err = sc.KmSkopstailcall.Update(
-		uint32(KMESH_TAIL_CALL_ROUTER_CONFIG),
-		uint32(sc.RouteConfigManager.FD()),
-		ebpf.UpdateAny)
-	if err != nil {
-		return nil, err
-	}
-
-	return spec, nil
-}
-
-func (sc *BpfSockOps) loadKmeshClusterObjects() (*ebpf.CollectionSpec, error) {
-	var (
-		err  error
-		spec *ebpf.CollectionSpec
-		opts ebpf.CollectionOptions
-	)
-	opts.Maps.PinPath = sc.Info.MapPath
-	err = sc.KmSkopstailcall.Update(
-		uint32(KMESH_TAIL_CALL_CLUSTER),
-		uint32(sc.ClusterManager.FD()),
-		ebpf.UpdateAny)
-	if err != nil {
-		return nil, err
-	}
-
-	return spec, nil
-}
-
 func (sc *BpfSockOps) Load() error {
 	/* load kmesh sockops main bpf prog */
 	spec, err := sc.loadKmeshSockopsObjects()
@@ -161,19 +81,6 @@ func (sc *BpfSockOps) Load() error {
 	prog := spec.Programs["sockops_prog"]
 	sc.Info.Type = prog.Type
 	sc.Info.AttachType = prog.AttachType
-
-	/* load kmesh sockops tail call bpf prog */
-	if _, err := sc.loadKmeshFilterObjects(); err != nil {
-		return err
-	}
-
-	if _, err := sc.loadRouteConfigObjects(); err != nil {
-		return err
-	}
-
-	if _, err := sc.loadKmeshClusterObjects(); err != nil {
-		return err
-	}
 
 	return nil
 }

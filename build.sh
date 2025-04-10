@@ -45,6 +45,7 @@ fi
 if [ -z "$1" -o "$1" == "-b"  -o  "$1" == "--build" ]; then
     prepare
     make
+    readelf -a kernel/ko_src/kmesh/kmesh.ko | grep "string table"
     exit
 fi
 

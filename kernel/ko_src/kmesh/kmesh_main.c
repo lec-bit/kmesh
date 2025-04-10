@@ -13,18 +13,23 @@
 #include "defer_connect.h"
 #include "kmesh_parse_protocol_data.h"
 #include "kmesh_parse_http_1_1.h"
+#include "kmesh_func.h"
 
 static int __init kmesh_init(void)
 {
     int ret;
 
     ret = defer_conn_init();
-    if (ret)
+    if (ret) {
+        LOG(KERN_ERR, "defer_conn_init failed:%d\n", ret);
         return ret;
-
+    }
+    kmesh_func_init();
     ret = proto_common_init();
-    if (ret)
+    if (ret) {
+        LOG(KERN_ERR, "proto_common_init failed:%d\n", ret);
         return ret;
+    }
 
     ret = kmesh_register_http_1_1_init();
     return ret;
@@ -33,6 +38,7 @@ static int __init kmesh_init(void)
 static void __exit kmesh_exit(void)
 {
     defer_conn_exit();
+    kmesh_func_exit();
     proto_common_exit();
 }
 
