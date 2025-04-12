@@ -42,6 +42,7 @@ var log = logger.NewLoggerScope("bpf_ads")
 type BpfAds struct {
 	SockConn BpfSockConn
 	SockOps  BpfSockOps
+	Kprobe   BpfKprobe
 	Tc       *general.BpfTCGeneral
 }
 
@@ -57,10 +58,11 @@ type BpfSockOps struct {
 	bpf2go.KmeshSockopsObjects
 }
 
-type BpfTracePoint struct {
-	Info general.BpfInfo
-	Link link.Link
-	bpf2go.KmeshTracepointObjects
+type BpfKprobe struct {
+	Info     general.BpfInfo
+	LinkSend link.Link
+	LinkRecv link.Link
+	bpf2go.KmeshKmeshKprobeObjects
 }
 
 func loadKmeshCgroupSock() (*ebpf.CollectionSpec, error) {
@@ -85,13 +87,13 @@ func loadKmeshSockOps() (*ebpf.CollectionSpec, error) {
 	return spec, err
 }
 
-func loadKmeshTracepoint() (*ebpf.CollectionSpec, error) {
+func loadKmeshKprobe() (*ebpf.CollectionSpec, error) {
 	var spec *ebpf.CollectionSpec
 	var err error
 	if helper.KernelVersionLowerThan5_13() {
-		spec, err = bpf2go.LoadKmeshTracepoint()
+		spec, err = bpf2go.LoadKmeshKprobe()
 	} else {
-		spec, err = bpf2go.LoadKmeshTracepoint()
+		spec, err = bpf2go.LoadKmeshKprobe()
 	}
 	return spec, err
 }
@@ -184,6 +186,10 @@ func (sc *BpfAds) Load() error {
 		return err
 	}
 
+	if err := sc.Kprobe.Load(); err != nil {
+		return err
+	}
+
 	if err := sc.Tc.LoadTC(); err != nil {
 		return err
 	}
@@ -232,6 +238,11 @@ func (sc *BpfAds) Attach() error {
 	if err := sc.SockConn.Attach(); err != nil {
 		return err
 	}
+
+	if err := sc.Kprobe.Attach(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
