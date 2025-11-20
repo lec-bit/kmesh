@@ -113,14 +113,8 @@ static inline bool is_ipv4_mapped_addr(__u32 ip6[4])
         (dst)[3] = (src)[3];                                                                                           \
     } while (0)
 
-#if OE_23_03
-#define bpf__strncmp                  bpf_strncmp
-#define GET_SKOPS_REMOTE_PORT(sk_ops) (__u16)((sk_ops)->remote_port)
-#else
 #define GET_SKOPS_REMOTE_PORT(sk_ops) (__u16)((sk_ops)->remote_port >> 16)
-#endif
-
-#define GET_SKOPS_LOCAL_PORT(sk_ops) (__u16)((sk_ops)->local_port)
+#define GET_SKOPS_LOCAL_PORT(sk_ops)  (__u16)((sk_ops)->local_port)
 
 #define MAX_BUF_LEN 100
 #define MAX_IP4_LEN 16

@@ -48,6 +48,13 @@ if [ -z "$1" -o "$1" == "-b" -o "$1" == "--build" ]; then
 	exit
 fi
 
+if [ "$1" == "-d" -o "$1" == "--docker" ]; then
+	prepare
+	make kmesh-bpf
+	make all-binary
+	exit
+fi
+
 if [ "$1" == "-i" -o "$1" == "--install" ]; then
 	make install
 	install

@@ -79,31 +79,11 @@ static int defer_connect(struct sock *sk, struct msghdr *msg, size_t size)
     tmpMem.size = kbuf_size;
     tmpMem.ptr = kbuf;
 
-#if OE_23_03
-    tcp_call_bpf_3arg(
-        sk,
-        BPF_SOCK_OPS_TCP_DEFER_CONNECT_CB,
-        ((u64)(&tmpMem) & U32_MAX),
-        (((u64)(&tmpMem) >> 32) & U32_MAX),
-        kbuf_size);
-    daddr = sk->sk_daddr;
-    dport = sk->sk_dport;
-
-    // daddr == 0 && dport == 0 are special flags meaning the circuit breaker is open
-    // Should reject connection here
-    if (daddr == 0 && dport == 0) {
-        tcp_set_state(sk, TCP_CLOSE);
-        sk->sk_route_caps = 0;
-        inet_sk(sk)->inet_dport = 0;
-        err = -1;
-        goto out;
-    }
-#else
     uaddr.sin_family = AF_INET;
     uaddr.sin_addr.s_addr = daddr;
     uaddr.sin_port = dport;
     err = BPF_CGROUP_RUN_PROG_INET4_CONNECT_KMESH(sk, (struct sockaddr *)&uaddr, &tmpMem);
-#endif
+
 connect:
     err = sk->sk_prot->connect(sk, (struct sockaddr *)&uaddr, sizeof(struct sockaddr_in));
     if (unlikely(err)) {
