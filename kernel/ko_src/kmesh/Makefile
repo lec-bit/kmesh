@@ -13,12 +13,13 @@ kmesh-objs = kmesh_main.o defer_connect.o \
 	kmesh_parse_http_1_1.o
 
 KERNELDIR ?= /lib/modules/$(shell uname -r)/build
+VMLINUX_PATH := /sys/kernel/btf/vmlinux
 PWD := $(shell pwd)
 
 ccflags-y += -Wno-discarded-qualifiers
 
 all:
-	$(MAKE) -C $(KERNELDIR) M=$(PWD)
+	$(MAKE) -C $(KERNELDIR) M=$(PWD) KBUILD_VMLINUX_LIBS=$(VMLINUX_PATH) modules
 
 install:
 	install -dp -m 0500 /lib/modules/kmesh

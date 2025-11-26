@@ -1,12 +1,8 @@
 #!/bin/bash
 
-VERSION=$(uname -r | cut -d '.' -f 1)
-KERNEL_VERSION=$(uname -r | cut -d '-' -f 1)
+source ./kmesh_compile_env_pre.sh
+KERNEL_VERSION=$(uname -r | cut -d '.' -f 1)
 KERNEL_HEADER_LINUX_BPF=/usr/include/linux/bpf.h
-
-function set_config() {
-	sed -i -r -e "s/($1)([ \t]*)([0-9]+)/\1\2$2/" config/kmesh_marcos_def.h
-}
 
 # MDA_LOOPBACK_ADDR
 if grep -q "FN(get_netns_cookie)" $KERNEL_HEADER_LINUX_BPF; then
@@ -29,24 +25,31 @@ else
 	set_config MDA_GID_UID_FILTER 0
 fi
 
-# ITER_TYPE_IS_UBUF
-if [ "$VERSION" -ge 6 ]; then
-	set_config ITER_TYPE_IS_UBUF 1
+# KERNEL_VERISON6
+if [ "$KERNEL_VERSION" -ge 6 ]; then
+	set_config KERNEL_VERISON6 1
 else
-	set_config ITER_TYPE_IS_UBUF 0
+	set_config KERNEL_VERISON6 0
 fi
 
 # ENHANCED_KERNEL
 if grep -q "FN(parse_header_msg)" $KERNEL_HEADER_LINUX_BPF; then
-	set_config ENHANCED_KERNEL 1
+	set_config ENHANCED_KERNEL 0
 else
 	set_config ENHANCED_KERNEL 0
 fi
 
+zcat /proc/config.gz | grep BTF
+cat "/boot/config-$(uname -r)" | grep BTF
 # KERNEL_KFUNC
-if [ "$VERSION" -ge 6 ]; then
-	set_config ENHANCED_KERNEL 1
-	set_config KERNEL_KFUNC 1
+if [ "$(check_config "CONFIG_DEBUG_INFO_BTF_MODULES")" == "y" ] &&
+	[ "$(check_config "CONFIG_DEBUG_INFO_BTF")" == "y" ] &&
+	[ "$KERNEL_VERSION" -ge 6 ]; then
+	set_config ENHANCED_KERNEL 0
+	set_config KERNEL_KFUNC 0
+	cp /sys/kernel/btf/vmlinux /lib/modules/$(uname -r)/build
 else
 	set_config KERNEL_KFUNC 0
 fi
+
+cat config/kmesh_marcos_def.h

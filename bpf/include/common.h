@@ -5,6 +5,7 @@
 #define _COMMON_H_
 
 #include "../../config/kmesh_marcos_def.h"
+#include <linux/in.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -17,7 +18,17 @@
 #include "errno.h"
 
 #if ENHANCED_KERNEL
-#include <bpf_helper_defs_ext.h>
+#if KERNEL_KFUNC
+#include "bpf_kfunc.h"
+#else
+struct bpf_mem_ptr {
+    void *ptr;
+    __u32 size;
+};
+#include "bpf_helper_defs_ext.h"
+#define bpf_km_setsockopt bpf_setsockopt
+#define bpf_km_getsockopt bpf_getsockopt
+#endif
 #endif
 
 #define bpf_unused __attribute__((__unused__))

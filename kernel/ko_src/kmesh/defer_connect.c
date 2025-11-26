@@ -20,8 +20,9 @@
 
 #include "defer_connect.h"
 
+#define KMESH_MODULE_ULP_NAME "kmesh_defer"
+
 static struct proto *kmesh_defer_proto = NULL;
-#define KMESH_DELAY_ERROR -1000
 
 #define BPF_CGROUP_RUN_PROG_INET4_CONNECT_KMESH(sk, uaddr, t_ctx)                                                      \
     ({                                                                                                                 \
@@ -54,13 +55,17 @@ static int defer_connect(struct sock *sk, struct msghdr *msg, size_t size)
         ubase = iov->iov_base;
         kbuf_size = iov->iov_len;
     } else if (iter_is_iovec(&msg->msg_iter)) {
-        iov = msg->msg_iter.iov;
+#if KERNEL_VERISON6
+        iov = msg->msg_iter.__iov;
         ubase = iov->iov_base;
         kbuf_size = iov->iov_len;
-#if ITER_TYPE_IS_UBUF
     } else if (iter_is_ubuf(&msg->msg_iter)) {
         ubase = msg->msg_iter.ubuf;
         kbuf_size = msg->msg_iter.count;
+#else
+        iov = msg->msg_iter.iov;
+        ubase = iov->iov_base;
+        kbuf_size = iov->iov_len;
 #endif
     } else
         goto connect;
