@@ -43,8 +43,8 @@ fi
 if [ "$(check_config "CONFIG_DEBUG_INFO_BTF_MODULES")" == "y" ] &&
 	[ "$(check_config "CONFIG_DEBUG_INFO_BTF")" == "y" ] &&
 	[ "$KERNEL_VERSION" -ge 6 ]; then
-	set_config ENHANCED_KERNEL 1
-	set_config KERNEL_KFUNC 1
+	set_config ENHANCED_KERNEL 0
+	set_config KERNEL_KFUNC 0
 else
 	set_config KERNEL_KFUNC 0
 fi

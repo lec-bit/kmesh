@@ -150,7 +150,7 @@ function set_enhanced_kernel_env() {
 		[ "$(check_config "CONFIG_DEBUG_INFO_BTF_MODULES")" == "y" ] &&
 		[ "$(check_config "CONFIG_DEBUG_INFO_BTF")" == "y" ] &&
 		[ "$KERNEL_MAJOR" -ge 6 ]; then
-		export ENHANCED_KERNEL="enhanced"
+		export ENHANCED_KERNEL="normal"
 	else
 		export ENHANCED_KERNEL="normal"
 	fi
