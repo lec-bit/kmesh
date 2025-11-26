@@ -15,7 +15,7 @@ function dependency_pkg_install() {
 	if command -v apt >/dev/null; then
 		echo "Checking for required packages on a Debian-based system..."
 
-		packages=(git make clang libbpf-dev llvm linux-tools-generic protobuf-compiler libprotobuf-dev libprotobuf-c-dev protobuf-c-compiler cmake pkg-config gcc-multilib)
+		packages=(git make clang libbpf-dev llvm linux-tools-generic protobuf-compiler libprotobuf-dev libprotobuf-c-dev protobuf-c-compiler cmake pkg-config gcc-multilib pahole linux-headers)
 
 		update_needed=false
 		for pkg in "${packages[@]}"; do
@@ -47,7 +47,7 @@ function dependency_pkg_install() {
 		echo "Checking for required packages on a Red Hat-based system..."
 
 		# List of required packages
-		packages=(git make clang llvm libboundscheck protobuf protobuf-c protobuf-c-devel bpftool libbpf libbpf-devel cmake pkg-config glibc-devel libstdc++-devel)
+		packages=(git make clang llvm libboundscheck protobuf protobuf-c protobuf-c-devel bpftool libbpf libbpf-devel cmake pkg-config glibc-devel libstdc++-devel dwarves)
 
 		# Install each missing package
 		for pkg in "${packages[@]}"; do
@@ -104,6 +104,32 @@ function kmesh_set_env() {
 	export EXTRA_CFLAGS="-O0 -g"
 }
 
+function set_config() {
+	sed -i -r -e "s/($1)([ \t]*)([0-9]+)/\1\2$2/" config/kmesh_marcos_def.h
+}
+
+detect_config() {
+	local kernel_version=$(uname -r)
+
+	if [ -f "/proc/config.gz" ]; then
+		zcat /proc/config.gz 2>/dev/null
+		return $?
+	fi
+
+	if [ -f "/boot/config-$kernel_version" ]; then
+		cat "/boot/config-$kernel_version" 2>/dev/null
+		return $?
+	fi
+}
+
+CONFIG_CONTENT=$(detect_config)
+
+check_config() {
+	local config_name=$1
+	value=$(echo "$CONFIG_CONTENT" | grep -w "$config_name" | cut -d= -f2)
+	echo "$value"
+}
+
 function set_enhanced_kernel_env() {
 	# we use /usr/include/linux/bpf.h to determine the runtime environment’s
 	# support for kmesh. Considering the case of online image compilation, a
@@ -118,8 +144,17 @@ function set_enhanced_kernel_env() {
 		export KERNEL_HEADER_LINUX_BPF=/usr/include/linux/bpf.h
 	fi
 
-	if grep -q "FN(parse_header_msg)" $KERNEL_HEADER_LINUX_BPF; then
-		export ENHANCED_KERNEL="enhanced"
+	KERNEL_MAJOR=$(uname -r | awk -F '.' '{print $1}')
+
+	zcat /proc/config.gz | grep BTF
+	cat "/boot/config-$(uname -r)" | grep BTF
+	check_config "CONFIG_DEBUG_INFO_BTF_MODULES"
+	check_config "CONFIG_DEBUG_INFO_BTF"
+	if grep -q "FN(parse_header_msg)" $KERNEL_HEADER_LINUX_BPF ||
+		[ "$(check_config "CONFIG_DEBUG_INFO_BTF_MODULES")" == "y" ] &&
+		[ "$(check_config "CONFIG_DEBUG_INFO_BTF")" == "y" ] &&
+		[ "$KERNEL_MAJOR" -ge 6 ]; then
+		export ENHANCED_KERNEL="normal"
 	else
 		export ENHANCED_KERNEL="normal"
 	fi

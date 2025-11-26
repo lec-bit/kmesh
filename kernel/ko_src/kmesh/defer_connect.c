@@ -20,8 +20,9 @@
 
 #include "defer_connect.h"
 
+#define KMESH_MODULE_ULP_NAME "kmesh_defer"
+
 static struct proto *kmesh_defer_proto = NULL;
-#define KMESH_DELAY_ERROR -1000
 
 #define BPF_CGROUP_RUN_PROG_INET4_CONNECT_KMESH(sk, uaddr, t_ctx)                                                      \
     ({                                                                                                                 \
@@ -54,13 +55,17 @@ static int defer_connect(struct sock *sk, struct msghdr *msg, size_t size)
         ubase = iov->iov_base;
         kbuf_size = iov->iov_len;
     } else if (iter_is_iovec(&msg->msg_iter)) {
-        iov = msg->msg_iter.iov;
+#if KERNEL_VERISON6
+        iov = msg->msg_iter.__iov;
         ubase = iov->iov_base;
         kbuf_size = iov->iov_len;
-#if ITER_TYPE_IS_UBUF
     } else if (iter_is_ubuf(&msg->msg_iter)) {
         ubase = msg->msg_iter.ubuf;
         kbuf_size = msg->msg_iter.count;
+#else
+        iov = msg->msg_iter.iov;
+        ubase = iov->iov_base;
+        kbuf_size = iov->iov_len;
 #endif
     } else
         goto connect;
@@ -79,31 +84,11 @@ static int defer_connect(struct sock *sk, struct msghdr *msg, size_t size)
     tmpMem.size = kbuf_size;
     tmpMem.ptr = kbuf;
 
-#if OE_23_03
-    tcp_call_bpf_3arg(
-        sk,
-        BPF_SOCK_OPS_TCP_DEFER_CONNECT_CB,
-        ((u64)(&tmpMem) & U32_MAX),
-        (((u64)(&tmpMem) >> 32) & U32_MAX),
-        kbuf_size);
-    daddr = sk->sk_daddr;
-    dport = sk->sk_dport;
-
-    // daddr == 0 && dport == 0 are special flags meaning the circuit breaker is open
-    // Should reject connection here
-    if (daddr == 0 && dport == 0) {
-        tcp_set_state(sk, TCP_CLOSE);
-        sk->sk_route_caps = 0;
-        inet_sk(sk)->inet_dport = 0;
-        err = -1;
-        goto out;
-    }
-#else
     uaddr.sin_family = AF_INET;
     uaddr.sin_addr.s_addr = daddr;
     uaddr.sin_port = dport;
     err = BPF_CGROUP_RUN_PROG_INET4_CONNECT_KMESH(sk, (struct sockaddr *)&uaddr, &tmpMem);
-#endif
+
 connect:
     err = sk->sk_prot->connect(sk, (struct sockaddr *)&uaddr, sizeof(struct sockaddr_in));
     if (unlikely(err)) {
